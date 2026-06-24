@@ -185,7 +185,7 @@ function getWebmentionDiscoveryLink() {
     }
 }
 
-function getTinybirdTrackerScript(dataRoot) {
+function getTinybirdTrackerScript(dataRoot, gift) {
     const preview = dataRoot?.context?.includes('preview');
     if (preview) {
         return '';
@@ -208,7 +208,8 @@ function getTinybirdTrackerScript(dataRoot) {
         post_uuid: dataRoot.post?.uuid,
         post_type: dataRoot.context?.includes('post') ? 'post' : dataRoot.context?.includes('page') ? 'page' : null,
         member_uuid: dataRoot.member?.uuid,
-        member_status: dataRoot.member?.status
+        member_status: dataRoot.member?.status,
+        gift: gift || ''
     }, (value, key) => `tb_${key}="${value}"`).join(' ');
 
     return `<script defer src="${src}" data-stringify-payload="false" ${datasource ? `data-datasource="${datasource}"` : ''} data-storage="localStorage" data-host="${endpoint}" ${token && env !== 'production' ? `data-token="${token}"` : ''} ${tbParams}></script>`;
@@ -375,7 +376,10 @@ module.exports = async function ghost_head(options) { // eslint-disable-line cam
 
         // Use settingsHelpers to check if web analytics is enabled (includes all necessary checks)
         if (settingsHelpers.isWebAnalyticsEnabled()) {
-            head.push(getTinybirdTrackerScript(dataRoot));
+            // The gift-link token is set by the reader path into the template
+            // data frame (options.data._gift) — the same frame ghost_foot reads
+            // for the toast — not onto the data root, so read it from there.
+            head.push(getTinybirdTrackerScript(dataRoot, options.data._gift));
             // Set a flag in response locals to indicate tracking script is being served
             if (dataRoot._locals) {
                 dataRoot._locals.ghostAnalytics = true;

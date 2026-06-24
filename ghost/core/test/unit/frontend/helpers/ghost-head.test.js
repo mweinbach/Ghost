@@ -1548,6 +1548,43 @@ describe('{{ghost_head}} helper', function () {
             assert.match(rendered, /data-datasource="analytics_events"/);
         });
 
+        // These call ghost_head directly rather than via testGhostHead so they
+        // assert the tb_gift value without taking a snapshot — keeping them
+        // out of the shared tracker snapshots.
+        it('sets tb_gift to the token on a verified gift read', async function () {
+            // The gift reader path flags the render with the verified token as
+            // `_gift` on the template data frame (templateOptions.data, the same
+            // frame ghost_foot reads for the toast) — NOT on the data root. The
+            // tracker reads `options.data._gift` and forwards it so analytics can
+            // segment gift traffic and count per-link usage. Inject it the same
+            // way here (via templateOptions, not locals) so this guards the real
+            // production data path.
+            const rendered = (await ghost_head(testUtils.createHbsResponse({
+                renderObject: {post: posts[10]},
+                templateOptions: {_gift: 'gift_token_abc'},
+                locals: {
+                    relativeUrl: '/post/',
+                    context: ['post'],
+                    safeVersion: '4.3'
+                }
+            }))).toString();
+
+            assert.match(rendered, /tb_gift="gift_token_abc"/);
+        });
+
+        it('sets an empty tb_gift on a normal read', async function () {
+            const rendered = (await ghost_head(testUtils.createHbsResponse({
+                renderObject: {post: posts[10]},
+                locals: {
+                    relativeUrl: '/post/',
+                    context: ['post'],
+                    safeVersion: '4.3'
+                }
+            }))).toString();
+
+            assert.match(rendered, /tb_gift=""/);
+        });
+
         it('does not include tracker script when preview is set', async function () {
             const rendered = await testGhostHead(testUtils.createHbsResponse({
                 locals: {
