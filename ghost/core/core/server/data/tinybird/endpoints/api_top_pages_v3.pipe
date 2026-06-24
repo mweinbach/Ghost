@@ -49,6 +49,7 @@ SQL >
         {% end %}
         {% if defined(pathname) %} AND pathname = {{ String(pathname, description="Pathname to filter on", required=False) }} {% end %}
         {% if defined(post_uuid) %} AND post_uuid = {{ String(post_uuid, description="Post UUID to filter on", required=False) }} {% end %}
+        {% if defined(gift) %} AND gift != '' {% end %}
         {% if defined(post_type) %}
             {% if post_type == 'post' %}
                 AND post_type = 'post'
@@ -86,6 +87,7 @@ SQL >
         {% end %}
         {% if defined(pathname) %} AND pathname = {{ String(pathname, description="Pathname to filter on", required=False) }} {% end %}
         {% if defined(post_uuid) %} AND post_uuid = {{ String(post_uuid, description="Post UUID to filter on", required=False) }} {% end %}
+        {% if defined(gift) %} AND gift != '' {% end %}
         {% if defined(post_type) %}
             {% if post_type == 'post' %}
                 AND post_type = 'post'
