@@ -412,7 +412,7 @@ describe('Posts API', function () {
 
             await agent
                 .put(`/posts/${postResponse.id}/?formats=mobiledoc,lexical,html`)
-                .body({posts: [Object.assign({}, postResponse, {mobiledoc: updatedMobiledoc})]})
+                .body({posts: [Object.assign({}, postResponse, {mobiledoc: updatedMobiledoc, lexical: null})]})
                 .expectStatus(200)
                 .matchBodySnapshot({
                     posts: [Object.assign({}, matchPostShallowIncludes, {published_at: null})]
@@ -423,23 +423,22 @@ describe('Posts API', function () {
                     'x-cache-invalidate': stringMatching(/^\/p\/[a-z0-9-]+\/, \/p\/[a-z0-9-]+\/\?member_status=anonymous, \/p\/[a-z0-9-]+\/\?member_status=free, \/p\/[a-z0-9-]+\/\?member_status=paid$/)
                 });
 
-            // mobiledoc revisions are created
+            // mobiledoc input is converted to lexical on save, so no mobiledoc revisions are created
             const mobiledocRevisions = await models.MobiledocRevision
                 .where('post_id', postResponse.id)
                 .orderBy('created_at_ts', 'desc')
                 .fetchAll();
 
-            assert.equal(mobiledocRevisions.length, 2);
-            assert.equal(mobiledocRevisions.at(0).get('mobiledoc'), updatedMobiledoc);
-            assert.equal(mobiledocRevisions.at(1).get('mobiledoc'), originalMobiledoc);
+            assert.equal(mobiledocRevisions.length, 0);
 
-            // post revisions are not created
+            // content is converted to lexical, so the initial lexical post revision is
+            // created instead of a mobiledoc revision (the update omits save_revision)
             const postRevisions = await models.PostRevision
                 .where('post_id', postResponse.id)
                 .orderBy('created_at_ts', 'desc')
                 .fetchAll();
 
-            assert.equal(postRevisions.length, 0);
+            assert.equal(postRevisions.length, 1);
         });
 
         it('Can update a post with lexical', async function () {

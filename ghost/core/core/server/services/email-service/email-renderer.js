@@ -18,6 +18,7 @@ const {getEmailDesign} = require('../email-rendering/email-design');
 const {registerHelpers} = require('./helpers/register-helpers');
 const crypto = require('crypto');
 const {getPostAccessFilter} = require('../members/content-gating');
+const {mobiledocToLexical} = require('@tryghost/kg-converters');
 /** @import {TemplateDelegate} from 'handlebars' */
 
 const DEFAULT_LOCALE = 'en-gb';
@@ -463,22 +464,18 @@ class EmailRenderer {
     async renderPostBaseHtml(post, newsletter) {
         const postUrl = this.#getPostUrl(post);
 
-        let html;
-        if (post.get('lexical')) {
-            // only lexical's renderer is async
-            html = await this.#renderers.lexical.render(
-                post.get('lexical'),
-                {
-                    target: 'email',
-                    postUrl,
-                    design: this.#getEmailDesign(newsletter)
-                }
-            );
-        } else {
-            html = this.#renderers.mobiledoc.render(
-                JSON.parse(post.get('mobiledoc')), {target: 'email', postUrl}
-            );
-        }
+        // posts are migrated to lexical on save, but legacy content may still be stored as
+        // mobiledoc - convert it to lexical so it can be rendered.
+        const lexical = post.get('lexical') || mobiledocToLexical(post.get('mobiledoc'));
+
+        const html = await this.#renderers.lexical.render(
+            lexical,
+            {
+                target: 'email',
+                postUrl,
+                design: this.#getEmailDesign(newsletter)
+            }
+        );
         return html;
     }
 
