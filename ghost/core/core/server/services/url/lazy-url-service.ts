@@ -142,12 +142,35 @@ export class LazyUrlService implements LazyUrlServiceBackend {
         return [...this.requiredRelations];
     }
 
-    // The record columns the base filter for a type reads (e.g. ['status',
-    // 'type'] for posts, ['visibility'] for tags). Callers serializing a
-    // resource's URL must load these or the resource is rejected as thin.
+    // The record columns a resource of this type must carry for the lazy service
+    // to produce a URL: the base-filter columns it reads (e.g. ['status', 'type']
+    // for posts, ['visibility'] for tags) plus the scalar columns its routers'
+    // permalinks substitute (slug, id, and published_at for date tokens like
+    // :year/:month/:day). Permalink relations (primary_tag/primary_author) are
+    // covered separately by getRequiredRelations. Callers serializing a URL must
+    // load these or the resource is thin and the URL can't be built — eager
+    // never needs them because it looks URLs up by id.
     getRequiredFields(routerType: string): string[] {
+        const fields = new Set<string>();
         const base = this.baseFilters.get(routerType);
-        return base ? [...base.fields] : [];
+        if (base) {
+            base.fields.forEach(field => fields.add(field));
+        }
+        for (const config of this.routerConfigs) {
+            if (config.resourceType !== routerType) {
+                continue;
+            }
+            if (/\bslug\b/.test(config.permalink)) {
+                fields.add('slug');
+            }
+            if (/\bid\b/.test(config.permalink)) {
+                fields.add('id');
+            }
+            if (/\b(year|month|day)\b/.test(config.permalink)) {
+                fields.add('published_at');
+            }
+        }
+        return [...fields];
     }
 
     hasFinished(): boolean {
