@@ -57,6 +57,38 @@ function buildBaseFilters(): Map<string, BaseFilter> {
     return baseFilters;
 }
 
+// Relation roots are loaded via getRequiredRelations (as withRelated), not as
+// scalar columns; `page`/`type` are the router-type discriminator, always set
+// on the resource. Everything else a router filter references is a scalar
+// own-column the resource must carry to be routed like eager.
+const FILTER_NON_SCALAR_FIELDS = new Set([
+    'tag', 'tags', 'author', 'authors', 'primary_tag', 'primary_author', 'page', 'type'
+]);
+
+// Scalar (own-column) fields a router filter reads, e.g. 'featured' from
+// 'featured:true'. Dotted clauses (e.g. tags.visibility) are relation
+// sub-fields and skipped — getRequiredRelations loads those relations.
+//
+// Only field names at an NQL expression boundary (start of the filter, or after
+// a `+`/`,`/`(` combinator) are matched, so colon-bearing values — URLs,
+// timestamps like 2020-01-01T00:00:00 — aren't mistaken for fields.
+function filterScalarFields(filter: string | null): string[] {
+    if (!filter) {
+        return [];
+    }
+    const fields = new Set<string>();
+    const matcher = /(?:^|[+,(])\s*(\w+)(\.\w+)?:/g;
+    let match;
+    while ((match = matcher.exec(filter)) !== null) {
+        const [, root, sub] = match;
+        if (sub || FILTER_NON_SCALAR_FIELDS.has(root)) {
+            continue;
+        }
+        fields.add(root);
+    }
+    return [...fields];
+}
+
 interface LazyUrlServiceDeps {
     urlUtils?: typeof localUtils;
     findResource: FindResource;
@@ -169,6 +201,10 @@ export class LazyUrlService implements LazyUrlServiceBackend {
             if (/\b(year|month|day)\b/.test(config.permalink)) {
                 fields.add('published_at');
             }
+            // Scalar columns the router filter reads (e.g. featured), so a
+            // filtered router (featured:true, etc.) picks the same permalink
+            // eager would instead of falling through on an undefined field.
+            filterScalarFields(config.filter).forEach(field => fields.add(field));
         }
         return [...fields];
     }
@@ -379,6 +415,11 @@ export class LazyUrlService implements LazyUrlServiceBackend {
         }
         if (/\bprimary_author\b/.test(config.filter) && r.primary_author === undefined) {
             missing.push('primary_author');
+        }
+        for (const field of filterScalarFields(config.filter)) {
+            if (r[field] === undefined) {
+                missing.push(field);
+            }
         }
         if (missing.length === 0) {
             return;
