@@ -25,13 +25,15 @@ class MailgunEmailSuppressionList extends AbstractEmailSuppressionList {
     }
 
     async removeEmail(email) {
-        try {
-            await this.apiClient.removeBounce(email);
-            await this.apiClient.removeComplaint(email);
-            await this.apiClient.removeUnsubscribe(email);
-        } catch (err) {
-            logging.error(err);
-            return false;
+        if (this.apiClient) {
+            try {
+                await this.apiClient.removeBounce(email);
+                await this.apiClient.removeComplaint(email);
+                await this.apiClient.removeUnsubscribe(email);
+            } catch (err) {
+                logging.error(err);
+                return false;
+            }
         }
 
         try {
@@ -49,6 +51,10 @@ class MailgunEmailSuppressionList extends AbstractEmailSuppressionList {
     }
 
     async removeUnsubscribe(email) {
+        if (!this.apiClient) {
+            return true;
+        }
+
         try {
             await this.apiClient.removeUnsubscribe(email);
         } catch (err) {
@@ -58,6 +64,10 @@ class MailgunEmailSuppressionList extends AbstractEmailSuppressionList {
     }
 
     async removeComplaint(email) {
+        if (!this.apiClient) {
+            return true;
+        }
+
         try {
             await this.apiClient.removeComplaint(email);
         } catch (err) {

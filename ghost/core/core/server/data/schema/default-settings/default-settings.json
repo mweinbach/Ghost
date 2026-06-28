@@ -437,6 +437,14 @@
         }
     },
     "email": {
+        "email_provider": {
+            "defaultValue": "mailgun",
+            "validations": {
+                "isEmpty": false,
+                "isIn": [["mailgun", "resend", "cloudflare"]]
+            },
+            "type": "string"
+        },
         "mailgun_domain": {
             "defaultValue": null,
             "type": "string"
@@ -446,6 +454,22 @@
             "type": "string"
         },
         "mailgun_base_url": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "cloudflare_email_account_id": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "cloudflare_email_zone_id": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "cloudflare_email_api_token": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "cloudflare_email_sender_domain": {
             "defaultValue": null,
             "type": "string"
         },

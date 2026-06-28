@@ -1,6 +1,6 @@
 import DefaultRecipients from './default-recipients';
 import EnableNewsletters from './enable-newsletters';
-import MailGun from './mailgun';
+import MailProvider from './mailgun';
 import Newsletters from './newsletters';
 import React from 'react';
 import SearchableSection from '../../searchable-section';
@@ -11,18 +11,17 @@ export const searchKeywords = {
     enableNewsletters: ['emails', 'newsletters', 'newsletter sending', 'enable', 'disable', 'turn on', 'turn off'],
     newsletters: ['newsletters', 'emails', 'design', 'customization'],
     defaultRecipients: ['newsletters', 'default recipients', 'emails'],
-    mailgun: ['mailgun', 'emails', 'newsletters']
+    mailProvider: ['mail provider', 'mailgun', 'resend', 'cloudflare', 'emails', 'newsletters']
 };
 
 const EmailSettings: React.FC = () => {
-    const {settings, config} = useGlobalData();
+    const {settings} = useGlobalData();
     const [newslettersEnabled] = getSettingValues(settings, ['editor_default_email_recipients']) as [string];
     const hasNewslettersEnabled = newslettersEnabled !== 'disabled';
-    const hasMailgun = hasNewslettersEnabled && !config.mailgunIsConfigured;
     const visibleSearchKeywords = [
         searchKeywords.enableNewsletters,
         ...(hasNewslettersEnabled ? [searchKeywords.defaultRecipients, searchKeywords.newsletters] : []),
-        ...(hasMailgun ? [searchKeywords.mailgun] : [])
+        ...(hasNewslettersEnabled ? [searchKeywords.mailProvider] : [])
     ].flat();
 
     return (
@@ -32,7 +31,7 @@ const EmailSettings: React.FC = () => {
                 <>
                     <DefaultRecipients keywords={searchKeywords.defaultRecipients} />
                     <Newsletters keywords={searchKeywords.newsletters} />
-                    {hasMailgun && <MailGun keywords={searchKeywords.mailgun} />}
+                    <MailProvider keywords={searchKeywords.mailProvider} />
                 </>
             )}
         </SearchableSection>

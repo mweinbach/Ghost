@@ -14,6 +14,7 @@ class EmailAnalyticsServiceWrapper {
         const EmailEventStorage = require('../email-service/email-event-storage');
         const EmailEventProcessor = require('../email-service/email-event-processor');
         const MailgunProvider = require('./email-analytics-provider-mailgun');
+        const {CloudflareAnalyticsProvider, providerStatus} = require('../email-providers');
         const {EmailRecipientFailure, EmailSpamComplaintEvent, Email} = require('../../models');
         const StartEmailAnalyticsJobEvent = require('./events/start-email-analytics-job-event');
         const domainEvents = require('@tryghost/domain-events');
@@ -47,13 +48,19 @@ class EmailAnalyticsServiceWrapper {
             prometheusClient
         });
 
+        const providers = [
+            new MailgunProvider({config, settings, labs})
+        ];
+        const cloudflareConfig = providerStatus.getCloudflareConfig({config, settings});
+        if (cloudflareConfig.apiToken && cloudflareConfig.zoneId) {
+            providers.push(new CloudflareAnalyticsProvider({config: cloudflareConfig}));
+        }
+
         this.service = new EmailAnalyticsService({
             config,
             settings,
             eventProcessor,
-            providers: [
-                new MailgunProvider({config, settings, labs})
-            ],
+            providers,
             queries,
             domainEvents,
             prometheusClient

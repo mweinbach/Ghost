@@ -9,6 +9,7 @@ const settingsCache = require('../../../shared/settings-cache');
 const urlUtils = require('../../../shared/url-utils');
 const metrics = require('@tryghost/metrics');
 const emailAddress = require('../email-address');
+const {CloudflareEmailClient, providerStatus} = require('../email-providers');
 const messages = {
     title: 'Ghost at {domain}',
     checkEmailConfigInstructions: 'Please see {url} for instructions on configuring email.',
@@ -100,6 +101,24 @@ module.exports = class GhostMailer {
     constructor() {
         const nodemailer = require('@tryghost/nodemailer');
 
+        const transactionalProviderName = providerStatus.getTransactionalProviderName({
+            config,
+            settings: settingsCache
+        });
+
+        if (transactionalProviderName === 'cloudflare') {
+            this.state = {
+                usingDirect: false,
+                usingMailgun: false,
+                usingCloudflare: true
+            };
+            this.transport = null;
+            this.provider = new CloudflareEmailClient({
+                config: providerStatus.getCloudflareConfig({config, settings: settingsCache})
+            });
+            return;
+        }
+
         let transport = config.get('mail') && config.get('mail').transport || 'direct';
         transport = transport.toLowerCase();
 
@@ -108,7 +127,8 @@ module.exports = class GhostMailer {
 
         this.state = {
             usingDirect: transport === 'direct',
-            usingMailgun: transport === 'mailgun'
+            usingMailgun: transport === 'mailgun',
+            usingCloudflare: false
         };
         this.transport = nodemailer(transport, options);
     }
@@ -138,6 +158,10 @@ module.exports = class GhostMailer {
         }
 
         const messageToSend = createMessage(message);
+        if (this.state.usingCloudflare) {
+            return await this.sendWithProvider(messageToSend);
+        }
+
         if (this.state.usingMailgun) {
             const tags = this.getTags(message.tags);
             if (tags.length > 0) {
@@ -160,6 +184,33 @@ module.exports = class GhostMailer {
         }
 
         return response;
+    }
+
+    async sendWithProvider(message) {
+        const startTime = Date.now();
+        try {
+            const response = await this.provider.send(message);
+            metrics.metric('mail-provider-send-transactional-mail', {
+                value: Date.now() - startTime,
+                provider: 'cloudflare',
+                statusCode: 200
+            });
+
+            return {
+                message: tpl(messages.messageSent),
+                response
+            };
+        } catch (err) {
+            metrics.metric('mail-provider-send-transactional-mail', {
+                value: Date.now() - startTime,
+                provider: 'cloudflare',
+                statusCode: err.statusCode || err.status || 500
+            });
+            throw createMailError({
+                message: tpl(messages.reason, {reason: err.message || err}),
+                err
+            });
+        }
     }
 
     async sendMail(message) {

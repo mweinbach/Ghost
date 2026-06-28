@@ -11,7 +11,7 @@
 
     <p class="gh-publish-confirmation">
         {{this.emailErrorMessage}}
-        {{#unless this.config.mailgunIsConfigured}}
+        {{#unless this.config.mailProviderConfigured}}
         <br><br>
         If the error persists, please verify your email settings.
         {{/unless}}
@@ -34,4 +34,3 @@
         />
     </div>
 {{/let}}
-

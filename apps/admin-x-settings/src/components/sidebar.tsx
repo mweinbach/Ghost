@@ -59,8 +59,7 @@ const Sidebar: React.FC = () => {
     const hasStripeEnabled = checkStripeEnabled(settings || [], config || {});
     const hasAutomations = useFeatureFlag('automations');
     const hasNewslettersEnabled = newslettersEnabled !== 'disabled';
-    const mailgunIsConfigured = Boolean(config.mailgunIsConfigured);
-    const hasMailgun = hasNewslettersEnabled && !mailgunIsConfigured;
+    const hasMailProvider = hasNewslettersEnabled || hasAutomations;
     const visibleMembershipSearchKeywords = React.useMemo(() => [
         membershipSearchKeywords.access,
         membershipSearchKeywords.tiers,
@@ -75,9 +74,9 @@ const Sidebar: React.FC = () => {
             keywords.enableNewsletters,
             ...(hasNewslettersEnabled ? [keywords.defaultRecipients] : []),
             ...(hasAutomations ? [emailsSearchKeywords.emails] : (hasNewslettersEnabled ? [emailSearchKeywords.newsletters] : [])),
-            ...(hasMailgun ? [keywords.mailgun] : [])
+            ...(hasMailProvider ? [keywords.mailProvider] : [])
         ].flat();
-    }, [hasAutomations, hasNewslettersEnabled, hasMailgun]);
+    }, [hasAutomations, hasMailProvider, hasNewslettersEnabled]);
     const visibleGrowthSearchKeywords = React.useMemo(() => [
         growthSearchKeywords.network,
         growthSearchKeywords.explore,

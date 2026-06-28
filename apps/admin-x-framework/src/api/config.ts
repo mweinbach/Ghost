@@ -23,6 +23,17 @@ export type Config = {
     labs: Record<string, boolean>;
     stripeDirect: boolean;
     mail: string;
+    mailProviderConfigured?: boolean;
+    mailProviders?: {
+        selected: string;
+        configured: boolean;
+        providers: Record<string, {
+            configured: boolean;
+            missing?: string[];
+            newslettersEnabled?: boolean;
+            capabilities: Record<string, boolean>;
+        }>;
+    };
     stats?: JSONObject & {
         endpoint?: string;
         id?: string;

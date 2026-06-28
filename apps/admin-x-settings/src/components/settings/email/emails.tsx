@@ -1,6 +1,6 @@
 import DefaultRecipients from './default-recipients';
 import EnableNewsletters from './enable-newsletters';
-import MailGun from './mailgun';
+import MailProvider from './mailgun';
 import NewslettersTabContent, {type NewslettersFilter} from './newsletters/newsletters-tab-content';
 import NiceModal from '@ebay/nice-modal-react';
 import React, {useEffect, useRef, useState} from 'react';
@@ -21,7 +21,7 @@ export const searchKeywords = {
     enableNewsletters: ['emails', 'newsletters', 'newsletter sending', 'enable', 'disable', 'turn on', 'turn off'],
     emails: ['emails', 'newsletters', 'automation emails', 'transactional', 'design', 'customization', 'automations', 'welcome'],
     defaultRecipients: ['newsletters', 'default recipients', 'emails'],
-    mailgun: ['mailgun', 'emails', 'newsletters']
+    mailProvider: ['mail provider', 'mailgun', 'resend', 'cloudflare', 'emails', 'newsletters', 'transactional']
 };
 
 const TransactionalTabContent: React.FC = () => {
@@ -180,15 +180,14 @@ const EmailsGroup: React.FC<{ keywords: string[]; newslettersEnabled: boolean }>
 };
 
 const Emails: React.FC = () => {
-    const {settings, config} = useGlobalData();
+    const {settings} = useGlobalData();
     const [newslettersEnabled] = getSettingValues(settings, ['editor_default_email_recipients']) as [string];
     const hasNewslettersEnabled = newslettersEnabled !== 'disabled';
-    const hasMailgun = hasNewslettersEnabled && !config.mailgunIsConfigured;
     const visibleSearchKeywords = [
         searchKeywords.enableNewsletters,
         ...(hasNewslettersEnabled ? [searchKeywords.defaultRecipients] : []),
         searchKeywords.emails,
-        ...(hasMailgun ? [searchKeywords.mailgun] : [])
+        searchKeywords.mailProvider
     ].flat();
 
     return (
@@ -196,7 +195,7 @@ const Emails: React.FC = () => {
             <EnableNewsletters keywords={searchKeywords.enableNewsletters} />
             {hasNewslettersEnabled && <DefaultRecipients keywords={searchKeywords.defaultRecipients} />}
             <EmailsGroup keywords={searchKeywords.emails} newslettersEnabled={hasNewslettersEnabled} />
-            {hasMailgun && <MailGun keywords={searchKeywords.mailgun} />}
+            <MailProvider keywords={searchKeywords.mailProvider} />
         </SearchableSection>
     );
 };

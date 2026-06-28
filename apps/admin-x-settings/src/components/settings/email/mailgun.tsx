@@ -3,6 +3,7 @@ import TopLevelGroup from '../../top-level-group';
 import useSettingGroup from '../../../hooks/use-setting-group';
 import {IconLabel, Link, Select, SettingGroupContent, TextField, withErrorBoundary} from '@tryghost/admin-x-design-system';
 import {getSettingValues, useEditSettings} from '@tryghost/admin-x-framework/api/settings';
+import {useGlobalData} from '../../providers/global-data-provider';
 import {useHandleError} from '@tryghost/admin-x-framework/hooks';
 
 const MAILGUN_REGIONS = [
@@ -10,7 +11,20 @@ const MAILGUN_REGIONS = [
     {label: '🇪🇺 EU', value: 'https://api.eu.mailgun.net/v3'}
 ];
 
-const MailGun: React.FC<{ keywords: string[] }> = ({keywords}) => {
+const MAIL_PROVIDER_OPTIONS = [
+    {label: 'Mailgun', value: 'mailgun'},
+    {label: 'Resend', value: 'resend'},
+    {label: 'Cloudflare', value: 'cloudflare'}
+];
+
+const providerLabels: Record<string, string> = {
+    mailgun: 'Mailgun',
+    resend: 'Resend',
+    cloudflare: 'Cloudflare'
+};
+
+const MailProvider: React.FC<{ keywords: string[] }> = ({keywords}) => {
+    const {config} = useGlobalData();
     const {
         localSettings,
         isEditing,
@@ -23,26 +37,65 @@ const MailGun: React.FC<{ keywords: string[] }> = ({keywords}) => {
     const {mutateAsync: editSettings} = useEditSettings();
     const handleError = useHandleError();
 
-    const [mailgunRegion, mailgunDomain, mailgunApiKey] = getSettingValues(localSettings, [
-        'mailgun_base_url', 'mailgun_domain', 'mailgun_api_key'
+    const [
+        emailProvider,
+        mailgunRegion,
+        mailgunDomain,
+        mailgunApiKey,
+        cloudflareAccountId,
+        cloudflareZoneId,
+        cloudflareApiToken,
+        cloudflareSenderDomain
+    ] = getSettingValues(localSettings, [
+        'email_provider',
+        'mailgun_base_url',
+        'mailgun_domain',
+        'mailgun_api_key',
+        'cloudflare_email_account_id',
+        'cloudflare_email_zone_id',
+        'cloudflare_email_api_token',
+        'cloudflare_email_sender_domain'
     ]) as string[];
 
+    const selectedProvider = emailProvider || config.mailProviders?.selected || 'mailgun';
     const isMailgunSetup = mailgunDomain && mailgunApiKey;
+    const isCloudflareSetup = cloudflareAccountId && cloudflareApiToken && cloudflareSenderDomain;
+    const isProviderSetup = selectedProvider === 'cloudflare' ? isCloudflareSetup : selectedProvider === 'mailgun' ? isMailgunSetup : false;
+    const cloudflareNewslettersEnabled = Boolean(config.mailProviders?.providers?.cloudflare?.newslettersEnabled);
 
-    const data = isMailgunSetup ? [
+    const data = isProviderSetup ? [
         {
             key: 'status',
             value: (
                 <IconLabel icon='check-circle' iconColorClass='text-green'>
-                    Mailgun is set up
+                    {providerLabels[selectedProvider]} is set up
                 </IconLabel>
             )
-        }
+        },
+        {
+            heading: 'Provider',
+            key: 'provider',
+            value: providerLabels[selectedProvider]
+        },
+        ...(selectedProvider === 'cloudflare' ? [{
+            heading: 'Newsletters',
+            key: 'newsletters',
+            value: cloudflareNewslettersEnabled ? 'Enabled' : 'Requires server config'
+        }, {
+            heading: 'Open tracking',
+            key: 'open-tracking',
+            value: 'Not supported'
+        }] : [])
     ] : [
+        {
+            heading: 'Provider',
+            key: 'provider',
+            value: providerLabels[selectedProvider]
+        },
         {
             heading: 'Status',
             key: 'status',
-            value: 'Mailgun is not set up'
+            value: selectedProvider === 'resend' ? 'Resend is not available in this build' : `${providerLabels[selectedProvider]} is not set up`
         }
     ];
 
@@ -53,11 +106,16 @@ const MailGun: React.FC<{ keywords: string[] }> = ({keywords}) => {
         />
     );
 
-    const apiKeysHint = (
+    const mailgunApiKeysHint = (
         <>Find your Mailgun API keys <Link href="https://app.mailgun.com/settings/api_security" rel="noopener noreferrer" target="_blank">here</Link></>
     );
-    const inputs = (
-        <SettingGroupContent>
+    const cloudflareApiTokenHint = (
+        <>Use a Cloudflare API token with Email Sending Edit and Analytics Read permissions.</>
+    );
+
+    let providerFields = null;
+    if (selectedProvider === 'mailgun') {
+        providerFields = (
             <div className='grid grid-cols-[120px_auto] gap-x-3 gap-y-6'>
                 <Select
                     options={MAILGUN_REGIONS}
@@ -69,28 +127,93 @@ const MailGun: React.FC<{ keywords: string[] }> = ({keywords}) => {
                 />
                 <TextField
                     title='Mailgun domain'
-                    value={mailgunDomain}
+                    value={mailgunDomain || ''}
                     onChange={(e) => {
                         updateSetting('mailgun_domain', e.target.value);
                     }}
                 />
                 <div className='col-span-2'>
                     <TextField
-                        hint={apiKeysHint}
+                        hint={mailgunApiKeysHint}
                         title='Mailgun private API key'
                         type='password'
-                        value={mailgunApiKey}
+                        value={mailgunApiKey || ''}
                         onChange={(e) => {
                             updateSetting('mailgun_api_key', e.target.value);
                         }}
                     />
                 </div>
             </div>
+        );
+    }
+
+    if (selectedProvider === 'cloudflare') {
+        providerFields = (
+            <div className='grid grid-cols-1 gap-6'>
+                <TextField
+                    title='Cloudflare account ID'
+                    value={cloudflareAccountId || ''}
+                    onChange={(e) => {
+                        updateSetting('cloudflare_email_account_id', e.target.value);
+                    }}
+                />
+                <TextField
+                    title='Cloudflare zone ID'
+                    value={cloudflareZoneId || ''}
+                    onChange={(e) => {
+                        updateSetting('cloudflare_email_zone_id', e.target.value);
+                    }}
+                />
+                <TextField
+                    hint={cloudflareApiTokenHint}
+                    title='Cloudflare API token'
+                    type='password'
+                    value={cloudflareApiToken || ''}
+                    onChange={(e) => {
+                        updateSetting('cloudflare_email_api_token', e.target.value);
+                    }}
+                />
+                <TextField
+                    title='Cloudflare sender domain'
+                    value={cloudflareSenderDomain || ''}
+                    onChange={(e) => {
+                        updateSetting('cloudflare_email_sender_domain', e.target.value);
+                    }}
+                />
+            </div>
+        );
+    }
+
+    if (selectedProvider === 'resend') {
+        providerFields = (
+            <SettingGroupContent
+                columns={1}
+                values={[{
+                    key: 'resend',
+                    value: 'Resend support is not available in this checkout yet.'
+                }]}
+            />
+        );
+    }
+
+    const inputs = (
+        <SettingGroupContent columns={1}>
+            <div className='grid grid-cols-1 gap-6'>
+                <Select
+                    options={MAIL_PROVIDER_OPTIONS}
+                    selectedOption={MAIL_PROVIDER_OPTIONS.find(option => option.value === selectedProvider)}
+                    title="Provider"
+                    onSelect={(option) => {
+                        updateSetting('email_provider', option?.value || 'mailgun');
+                    }}
+                />
+                {providerFields}
+            </div>
         </SettingGroupContent>
     );
 
     const groupDescription = (
-        <>The Mailgun API is used for bulk email newsletter delivery. <Link href='https://ghost.org/docs/faq/mailgun-newsletters/' target='_blank'>Why is this required?</Link></>
+        <>Choose the provider Ghost uses for email sending. Cloudflare newsletter sending requires server config because Cloudflare currently positions Email Service for transactional mail.</>
     );
 
     return (
@@ -101,7 +224,7 @@ const MailGun: React.FC<{ keywords: string[] }> = ({keywords}) => {
             navid='mailgun'
             saveState={saveState}
             testId='mailgun'
-            title='Mailgun'
+            title='Mail provider'
             onCancel={handleCancel}
             onEditingChange={handleEditingChange}
             onSave={async () => {
@@ -109,7 +232,7 @@ const MailGun: React.FC<{ keywords: string[] }> = ({keywords}) => {
                 // since when the Mailgun Region is not changed, the value doesn't get set in the updateSetting
                 // resulting in the mailgun base url remaining null
                 // this should not fire if the user has changed the region or if the region is already set
-                if (!mailgunRegion) {
+                if (selectedProvider === 'mailgun' && !mailgunRegion) {
                     try {
                         await editSettings([{key: 'mailgun_base_url', value: MAILGUN_REGIONS[0].value}]);
                     } catch (e) {
@@ -125,4 +248,4 @@ const MailGun: React.FC<{ keywords: string[] }> = ({keywords}) => {
     );
 };
 
-export default withErrorBoundary(MailGun, 'Mailgun');
+export default withErrorBoundary(MailProvider, 'Mail provider');

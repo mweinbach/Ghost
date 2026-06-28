@@ -22,6 +22,7 @@ class EmailServiceWrapper {
         const BatchSendingService = require('./batch-sending-service');
         const EmailSegmenter = require('./email-segmenter');
         const MailgunEmailProvider = require('./mailgun-email-provider');
+        const {CloudflareEmailClient, CloudflareEmailProvider, UnsupportedEmailProvider, providerStatus} = require('../email-providers');
         const {DomainWarmingService} = require('./domain-warming-service');
 
         const {Post, Newsletter, Email, EmailBatch, EmailRecipient, Member} = require('../../models');
@@ -74,6 +75,24 @@ class EmailServiceWrapper {
             errorHandler
         });
 
+        const cloudflareConfig = providerStatus.getCloudflareConfig({
+            config: configService,
+            settings: settingsCache
+        });
+        const cloudflareEmailProvider = new CloudflareEmailProvider({
+            client: new CloudflareEmailClient({config: cloudflareConfig}),
+            config: cloudflareConfig
+        });
+        const newsletterProviderName = providerStatus.getNewsletterProviderName({
+            config: configService,
+            settings: settingsCache
+        });
+        const emailProvider = newsletterProviderName === 'cloudflare'
+            ? cloudflareEmailProvider
+            : newsletterProviderName === 'mailgun'
+                ? mailgunEmailProvider
+                : new UnsupportedEmailProvider({providerName: newsletterProviderName});
+
         const emailRenderer = new EmailRenderer({
             settingsCache,
             settingsHelpers,
@@ -99,7 +118,7 @@ class EmailServiceWrapper {
         });
 
         const sendingService = new SendingService({
-            emailProvider: mailgunEmailProvider,
+            emailProvider,
             emailRenderer,
             emailAddressService: emailAddressService.service
         });

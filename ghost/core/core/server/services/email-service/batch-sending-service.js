@@ -620,6 +620,15 @@ class BatchSendingService {
                 },
                 {...this.#AFTER_RETRY_CONFIG, description: `save batch ${originalBatch.id} -> submitted`}
             );
+
+            if (response.permanentBounces?.length) {
+                await this.retryDb(
+                    async () => {
+                        await this.#recordPermanentBounces({batch, bounces: response.permanentBounces});
+                    },
+                    {...this.#AFTER_RETRY_CONFIG, description: `record permanent bounces for batch ${originalBatch.id}`}
+                );
+            }
         } catch (err) {
             if (err.code && err.code === 'BULK_EMAIL_SEND_FAILED') {
                 logging.error(err);
@@ -669,6 +678,21 @@ class BatchSendingService {
         );
 
         return succeeded;
+    }
+
+    async #recordPermanentBounces({batch, bounces}) {
+        const emails = bounces.map(bounce => bounce.email).filter(Boolean);
+        if (emails.length === 0) {
+            return;
+        }
+
+        await this.#db.knex('email_recipients')
+            .where('batch_id', batch.id)
+            .whereIn('member_email', emails)
+            .whereNull('failed_at')
+            .update({
+                failed_at: new Date()
+            });
     }
 
     /**

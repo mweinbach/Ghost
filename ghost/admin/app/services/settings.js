@@ -45,6 +45,18 @@ export default class SettingsService extends Service.extend(ValidationEngine) {
         return this.mailgunApiKey && this.mailgunDomain && this.mailgunBaseUrl;
     }
 
+    get cloudflareIsConfigured() {
+        return this.cloudflareEmailAccountId && this.cloudflareEmailApiToken && this.cloudflareEmailSenderDomain;
+    }
+
+    get mailProviderIsConfigured() {
+        if (this.emailProvider === 'cloudflare') {
+            return this.cloudflareIsConfigured;
+        }
+
+        return this.mailgunIsConfigured;
+    }
+
     // the settings API endpoint is a little weird as it's singular and we have
     // to pass in all types - if we ever fetch settings without all types then
     // save we have problems with the missing settings being removed or reset

@@ -63,8 +63,10 @@ export default class ModalPostPreviewEmailComponent extends Component {
         this.loadNewslettersTask.perform();
     }
 
-    get mailgunIsEnabled() {
-        return this.config.mailgunIsConfigured ||
+    get mailProviderIsEnabled() {
+        return this.config.mailProviderConfigured ||
+            this.config.mailgunIsConfigured ||
+            this.settings.mailProviderIsConfigured ||
             !!(this.settings.mailgunApiKey && this.settings.mailgunDomain && this.settings.mailgunBaseUrl);
     }
 
@@ -115,7 +117,7 @@ export default class ModalPostPreviewEmailComponent extends Component {
                 this.sendPreviewEmailError = 'Please enter a valid email';
                 return false;
             }
-            if (!this.mailgunIsEnabled) {
+            if (!this.mailProviderIsEnabled) {
                 this.sendPreviewEmailError = 'Please verify your email settings';
                 return false;
             }

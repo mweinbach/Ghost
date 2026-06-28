@@ -1,4 +1,5 @@
 const sinon = require('sinon');
+const nock = require('nock');
 const deferred = require('../../../../utils/deferred');
 const mail = require('../../../../../core/server/services/mail');
 const settingsCache = require('../../../../../core/shared/settings-cache');
@@ -52,6 +53,7 @@ describe('Mail: Ghostmailer', function () {
         mailer = null;
         await configUtils.restore();
         sandbox.restore();
+        nock.cleanAll();
     });
 
     it('should attach mail provider to ghost instance', function () {
@@ -509,6 +511,53 @@ describe('Mail: Ghostmailer', function () {
 
             const sentMessage = sendMailSpy.firstCall.args[0];
             assert.equal(sentMessage['o:tag'], undefined);
+        });
+    });
+
+    describe('Cloudflare provider', function () {
+        it('sends transactional mail through Cloudflare when explicitly configured', async function () {
+            configUtils.set({
+                mail: {
+                    provider: 'cloudflare',
+                    cloudflare: {
+                        accountId: 'account-id',
+                        apiToken: 'token',
+                        senderDomain: 'example.com',
+                        baseUrl: 'https://api.cloudflare.test'
+                    }
+                }
+            });
+
+            const request = nock('https://api.cloudflare.test')
+                .post('/accounts/account-id/email/sending/send', (body) => {
+                    assert.equal(body.to, 'user@example.com');
+                    assert.equal(body.subject, 'test');
+                    assert.equal(body.html, '<p>content</p>');
+                    assert.equal(body.headers, undefined);
+                    return true;
+                })
+                .reply(200, {
+                    success: true,
+                    result: {
+                        message_id: '<message-id@example.com>',
+                        delivered: ['user@example.com'],
+                        permanent_bounces: [],
+                        queued: []
+                    }
+                });
+
+            mailer = new mail.GhostMailer();
+
+            assert.equal(mailer.state.usingCloudflare, true);
+
+            const response = await mailer.send({
+                to: 'user@example.com',
+                subject: 'test',
+                html: '<p>content</p>'
+            });
+
+            assert.equal(response.message, 'Message sent. Double check inbox and spam folder!');
+            assert.equal(request.isDone(), true);
         });
     });
 });

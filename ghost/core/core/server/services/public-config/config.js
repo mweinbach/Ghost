@@ -4,6 +4,7 @@ const settingsCache = require('../../../shared/settings-cache');
 const labs = require('../../../shared/labs');
 const databaseInfo = require('../../data/db/info');
 const ghostVersion = require('@tryghost/version');
+const {providerStatus} = require('../email-providers');
 
 const tinybirdStatsPayloadProperties = [
     'endpoint',
@@ -46,6 +47,7 @@ const getTinybirdStatsPayload = (statsConfig, siteUuid) => {
 };
 
 module.exports = function getConfigProperties() {
+    const mailProviders = providerStatus.getProviderStatus({config, settings: settingsCache});
     const configProperties = {
         version: process.env.GHOST_BUILD_VERSION || ghostVersion.original,
         environment: config.get('env'),
@@ -57,6 +59,8 @@ module.exports = function getConfigProperties() {
         enableDeveloperExperiments: config.get('enableDeveloperExperiments') || false,
         stripeDirect: config.get('stripeDirect'),
         mailgunIsConfigured: !!(config.get('bulkEmail') && config.get('bulkEmail').mailgun),
+        mailProviderConfigured: mailProviders.configured,
+        mailProviders,
         emailAnalytics: config.get('emailAnalytics:enabled'),
         hostSettings: config.get('hostSettings'),
         tenor: config.get('tenor'),
