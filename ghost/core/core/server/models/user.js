@@ -6,6 +6,7 @@ const limitService = require('../services/limits');
 const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const security = require('@tryghost/security');
+const passwordService = require('../services/password');
 const {pipeline} = require('@tryghost/promise');
 const validatePassword = require('../lib/validate-password');
 const permissions = require('../services/permissions');
@@ -315,7 +316,7 @@ User = ghostBookshelf.Model.extend({
             }
 
             tasks.push((function hashPassword() {
-                return security.password.hash(self.get('password'))
+                return passwordService.hash(self.get('password'))
                     .then(function (hash) {
                         self.set('password', hash);
                     });
@@ -1076,7 +1077,7 @@ User = ghostBookshelf.Model.extend({
             }));
         }
 
-        return security.password.compare(plainPassword, hashedPassword)
+        return passwordService.compare(plainPassword, hashedPassword)
             .then(function (matched) {
                 if (matched) {
                     return;

@@ -1,7 +1,7 @@
 const TableImporter = require('./table-importer');
 const {faker} = require('@faker-js/faker');
 const {slugify} = require('@tryghost/string');
-const security = require('@tryghost/security');
+const passwordService = require('../../../services/password');
 const dateToDatabaseString = require('../utils/database-date');
 
 class UsersImporter extends TableImporter {
@@ -21,7 +21,7 @@ class UsersImporter extends TableImporter {
             id: this.fastFakeObjectId(),
             name: name,
             slug: slugify(name),
-            password: await security.password.hash(faker.color.human()),
+            password: await passwordService.hash(faker.color.human()),
             email: faker.internet.email({firstName, lastName}),
             profile_image: faker.image.avatar(),
             created_at: dateToDatabaseString(faker.date.between({from: new Date(2016, 0), to: new Date()}))
