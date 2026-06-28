@@ -46,19 +46,19 @@ This is a monorepo package.
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
-2. Run `pnpm` to install top-level dependencies.
+2. Run `bun install` to install top-level dependencies.
 
 Local docs with Storybook:
 
-- `pnpm storybook` — run Storybook and view docs under `src/docs/`
-- `pnpm build-storybook` — build a static export
+- `bun run storybook` — run Storybook and view docs under `src/docs/`
+- `bun run build-storybook` — build a static export
 
 ## Test
 
-- `pnpm test` — type-checks and runs Vitest with coverage
-- `pnpm test:unit` — type-checks and runs Vitest
-- `pnpm test:types` — TypeScript only
-- `pnpm lint` — ESLint for `src/` and `test/`
+- `bun run test` — type-checks and runs Vitest with coverage
+- `bun run test:unit` — type-checks and runs Vitest
+- `bun run test:types` — TypeScript only
+- `bun run lint` — ESLint for `src/` and `test/`
 
 ## Notes
 

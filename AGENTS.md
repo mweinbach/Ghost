@@ -4,16 +4,16 @@ This file provides guidance to AI Agents when working with code in this reposito
 
 ## Package Manager
 
-**Always use `pnpm` for all commands.** This repository uses pnpm workspaces, not npm.
+**Always use `bun` for all commands.** This repository uses Bun workspaces, not npm.
 
-Shared dependency versions are pinned in `pnpm-workspace.yaml` under `catalog:` and referenced as `"pkg": "catalog:"` (or `catalog:<name>` for named catalogs). `catalogMode` is `strict`, so `pnpm add` routes new deps into the catalog automatically — don't inline the version.
+Shared dependency versions are pinned in `package.json` under `workspaces.catalog` and referenced as `"pkg": "catalog:"` (or `catalog:<name>` for named catalogs). Don't inline versions when a catalog entry exists.
 
 ## Monorepo Structure
 
-Ghost is a pnpm + Nx monorepo with three workspace groups:
+Ghost is a Bun + Nx monorepo with three workspace groups:
 
 ### ghost/* - Core Ghost packages
-- **ghost/core** - Main Ghost application (Node.js/Express backend)
+- **ghost/core** - Main Ghost application (Bun runtime, Express backend)
   - Core server: `ghost/core/core/server/`
   - Frontend rendering: `ghost/core/core/frontend/`
 - **ghost/admin** - Ember.js admin client (legacy, being migrated to React)
@@ -44,73 +44,72 @@ Two categories of apps:
 
 ### Development
 ```bash
-corepack enable pnpm           # Enable corepack to use the correct pnpm version
-pnpm run setup                 # First-time setup (installs deps + submodules + builds workspace packages)
-pnpm dev                       # Start development (Docker backend + host frontend dev servers)
+bun run setup                 # First-time setup (installs deps + submodules + builds workspace packages)
+bun run dev                       # Start development (Docker backend + host frontend dev servers)
 ```
 
-> **Fresh worktree / first run — run `pnpm setup` before anything else.** It installs deps and syncs submodules. `pnpm fix` does a clean reinstall if anything misbehaves after a branch switch.
+> **Fresh worktree / first run — run `bun run setup` before anything else.** It installs deps and syncs submodules. `bun run fix` does a clean reinstall if anything misbehaves after a branch switch.
 
 ### Building
 ```bash
-pnpm build                     # Build all packages (Nx handles dependencies)
-pnpm build:clean               # Clean build artifacts and rebuild
+bun run build                     # Build all packages (Nx handles dependencies)
+bun run build:clean               # Clean build artifacts and rebuild
 ```
 
 ### Testing
 ```bash
 # Unit tests (from root)
-pnpm test:unit                 # Run all unit tests in all packages
-pnpm test:watch                # Watch mode — unified Vitest watcher (ghost/core + all apps)
+bun run test:unit                 # Run all unit tests in all packages
+bun run test:watch                # Watch mode — unified Vitest watcher (ghost/core + all apps)
 
 # Ghost core tests (from ghost/core/)
 cd ghost/core
-pnpm test:unit                 # Unit tests only (Vitest, run once)
-pnpm test:watch                # Watch mode — ghost/core unit tests only
-pnpm test:integration          # Integration tests
-pnpm test:e2e                  # Server-side e2e suites (webhooks/server/frontend/api) — not browser
-pnpm test:all                  # All test types
+bun run test:unit                 # Unit tests only (Vitest, run once)
+bun run test:watch                # Watch mode — ghost/core unit tests only
+bun run test:integration          # Integration tests
+bun run test:e2e                  # Server-side e2e suites (webhooks/server/frontend/api) — not browser
+bun run test:all                  # All test types
 
 # These run on sqlite with no extra services. The Redis/MinIO/S3 adapter suites
-# probe for their service and auto-skip when it's down (run `pnpm dev:storage`
+# probe for their service and auto-skip when it's down (run `bun run dev:storage`
 # etc. to exercise them); they always run in CI, which starts the services.
 
 # E2E browser tests (from root)
-pnpm test:e2e                  # Run e2e/ Playwright tests
+bun run test:e2e                  # Run e2e/ Playwright tests
 
 # Running a single test
 cd ghost/core
-pnpm test:single test/unit/path/to/test.test.js   # routes test/unit/* → unit config, test/* → DB config
+bun run test:single test/unit/path/to/test.test.js   # routes test/unit/* → unit config, test/* → DB config
 
 # Watch a single DB-backed file (integration/e2e) — the default test:watch only
 # covers unit tests, so point it at the DB config explicitly:
-pnpm exec vitest -c vitest.config.db.ts test/integration/path/to/test.test.js
+bunx vitest -c vitest.config.db.ts test/integration/path/to/test.test.js
 ```
 
 ### Linting
 ```bash
-pnpm lint                      # Lint all packages
-cd ghost/core && pnpm lint     # Lint Ghost core (server, shared, frontend, tests)
-cd ghost/admin && pnpm lint    # Lint Ember admin
+bun run lint                      # Lint all packages
+cd ghost/core && bun run lint     # Lint Ghost core (server, shared, frontend, tests)
+cd ghost/admin && bun run lint    # Lint Ember admin
 ```
 
 ### Database
 ```bash
-pnpm knex-migrator migrate     # Run database migrations
-pnpm reset:data                # Reset database with test data (1000 members, 100 posts) (requires pnpm dev running)
-pnpm reset:data:empty          # Reset database with no data (requires pnpm dev running)
+bun run knex-migrator migrate     # Run database migrations
+bun run reset:data                # Reset database with test data (1000 members, 100 posts) (requires bun run dev running)
+bun run reset:data:empty          # Reset database with no data (requires bun run dev running)
 ```
 
 ### Docker
 ```bash
-pnpm docker:build              # Build Docker images
-pnpm docker:clean              # Stop containers, remove volumes and local images
-pnpm docker:down               # Stop containers
+bun run docker:build              # Build Docker images
+bun run docker:clean              # Stop containers, remove volumes and local images
+bun run docker:down               # Stop containers
 ```
 
-### How `pnpm dev` works
+### How `bun run dev` works
 
-The `pnpm dev` command uses a **hybrid Docker + host development** setup:
+The `bun run dev` command uses a **hybrid Docker + host development** setup:
 
 **What runs in Docker:**
 - Ghost Core backend (with hot-reload via mounted source)
@@ -124,12 +123,12 @@ The `pnpm dev` command uses a **hybrid Docker + host development** setup:
 **Setup:**
 ```bash
 # Start everything (Docker + frontend dev servers)
-pnpm dev
+bun run dev
 
 # With optional services (uses Docker Compose file composition)
-pnpm dev:analytics             # Include Tinybird analytics
-pnpm dev:storage               # Include MinIO S3-compatible object storage
-pnpm dev:all                   # Include all optional services
+bun run dev:analytics             # Include Tinybird analytics
+bun run dev:storage               # Include MinIO S3-compatible object storage
+bun run dev:all                   # Include all optional services
 ```
 
 **Accessing Services:**
@@ -171,11 +170,11 @@ pnpm dev:all                   # Include all optional services
 
 **Translation Workflow:**
 ```bash
-pnpm --filter @tryghost/i18n translate          # Extract keys from source, update all locale files + context.json
-pnpm --filter @tryghost/i18n lint:translations   # Validate interpolation variables across locales
+bun run --filter @tryghost/i18n translate          # Extract keys from source, update all locale files + context.json
+bun run --filter @tryghost/i18n lint:translations   # Validate interpolation variables across locales
 ```
 
-`translate` is run as part of `pnpm --filter @tryghost/i18n test`. In CI, it fails if translation keys or `context.json` are out of date (`failOnUpdate: process.env.CI`). Always run `pnpm --filter @tryghost/i18n translate` after adding or changing `t()` calls.
+`translate` is run as part of `bun run --filter @tryghost/i18n test`. In CI, it fails if translation keys or `context.json` are out of date (`failOnUpdate: process.env.CI`). Always run `bun run --filter @tryghost/i18n translate` after adding or changing `t()` calls.
 
 **Rules for Translation Keys:**
 1. **Never split sentences across multiple `t()` calls.** Translators cannot reorder words across separate keys. Instead, use `@doist/react-interpolate` to embed React elements (links, bold, etc.) within a single translatable string.
@@ -297,7 +296,7 @@ Conventions:
 - **Legacy:** `admin-x-design-system` (being phased out, avoid for new work)
 
 ### Analytics (Tinybird)
-- **Local development:** `pnpm dev:analytics` (starts Tinybird + MySQL)
+- **Local development:** `bun run dev:analytics` (starts Tinybird + MySQL)
 - **Config:** Add Tinybird config to `ghost/core/config.development.json`
 - **Scripts:** `ghost/core/core/server/data/tinybird/scripts/`
 - **Datafiles:** `ghost/core/core/server/data/tinybird/`
@@ -306,11 +305,11 @@ Conventions:
 
 ### Build Issues
 ```bash
-pnpm fix                       # Clean cache + node_modules + reinstall
-pnpm build:clean               # Clean build artifacts
-pnpm nx reset                  # Reset Nx cache
+bun run fix                       # Clean cache + node_modules + reinstall
+bun run build:clean               # Clean build artifacts
+bunx --no-install nx reset                  # Reset Nx cache
 ```
 
 ### Test Issues
 - **E2E failures:** Check `e2e/CLAUDE.md` for debugging tips
-- **Docker issues:** `pnpm docker:clean && pnpm docker:build`
+- **Docker issues:** `bun run docker:clean && bun run docker:build`

@@ -8,7 +8,7 @@ const Minifier = require('../../../../../core/frontend/services/assets-minificat
 
 // minifier.getMatchingFiles() returns paths relative to process.cwd(); build
 // the expected paths the same way so assertions do not assume the test runs
-// with process.cwd() === ghost/core (the unified `pnpm test:watch` runs from
+// with process.cwd() === ghost/core (the unified `bun run test:watch` runs from
 // the repo root).
 const expectedFixturePath = file => path.relative(
     process.cwd(),

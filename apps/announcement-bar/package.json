@@ -19,16 +19,16 @@
     "react-dom": "catalog:react17"
   },
   "scripts": {
-    "dev": "pnpm build && concurrently --kill-others --names preview,build \"vite preview -l silent\" \"pnpm build:watch\"",
+    "dev": "bun run build && concurrently --kill-others --names preview,build \"vite preview -l silent\" \"bun run build:watch\"",
     "build": "vite build",
     "build:watch": "vite build --watch --mode development",
     "test": "vitest run",
-    "test:ci": "pnpm test --coverage",
-    "test:unit": "pnpm test:ci",
+    "test:ci": "bun run test --coverage",
+    "test:unit": "bun run test:ci",
     "lint": "eslint src test --cache",
-    "preship": "pnpm lint",
+    "preship": "bun run lint",
     "ship": "node ../../.github/scripts/release-apps.js",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "bun run build"
   },
   "browserslist": {
     "production": [

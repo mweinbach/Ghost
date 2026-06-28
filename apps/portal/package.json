@@ -15,20 +15,20 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "dev": "pnpm build && concurrently --kill-others --names preview,build \"pnpm preview -l silent\" \"pnpm build:watch\"",
+    "dev": "bun run build && concurrently --kill-others --names preview,build \"bun run preview -l silent\" \"bun run build:watch\"",
     "build": "vite build",
     "build:watch": "vite build --watch --mode development",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "pnpm test --coverage",
-    "test:unit": "pnpm test:ci",
+    "test:ci": "bun run test --coverage",
+    "test:unit": "bun run test:ci",
     "lint:code": "eslint src test --cache",
     "lint:types": "tsc --noEmit",
-    "lint": "pnpm lint:code && pnpm lint:types",
-    "preship": "pnpm lint",
+    "lint": "bun run lint:code && bun run lint:types",
+    "preship": "bun run lint",
     "ship": "node ../../.github/scripts/release-apps.js",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "bun run build"
   },
   "browserslist": {
     "production": [

@@ -8,12 +8,12 @@
  * Generates and clears analytics events directly in the Tinybird local instance.
  *
  * Usage:
- *   pnpm data:analytics:generate [count]  - Generate analytics events
- *   pnpm data:analytics:clear             - Clear all analytics events for the site
+ *   bun run data:analytics:generate [count]  - Generate analytics events
+ *   bun run data:analytics:clear             - Clear all analytics events for the site
  *
  * Prerequisites:
- *   - Docker environment running: pnpm dev:analytics
- *   - Ghost database populated with posts/members: pnpm reset:data
+ *   - Docker environment running: bun run dev:analytics
+ *   - Ghost database populated with posts/members: bun run reset:data
  */
 
 const DockerDatabaseUtils = require('./docker-database-utils');
@@ -204,13 +204,13 @@ class DockerAnalyticsManager {
         } catch (error) {
             if (error.message.includes('No such file') || error.message.includes('No token found')) {
                 console.error('Tinybird config not found in Docker volume.');
-                console.error('Make sure Tinybird is running: pnpm dev:analytics');
+                console.error('Make sure Tinybird is running: bun run dev:analytics');
             } else if (error.message.includes('Cannot connect to the Docker daemon')) {
                 console.error('Docker is not running. Please start Docker first.');
             } else {
                 console.error('Failed to fetch Tinybird token:', error.message);
             }
-            throw new Error('Could not retrieve Tinybird token. Ensure pnpm dev:analytics is running.');
+            throw new Error('Could not retrieve Tinybird token. Ensure bun run dev:analytics is running.');
         }
     }
 
@@ -243,7 +243,7 @@ class DockerAnalyticsManager {
         this.assignPostPopularity();
 
         if (this.posts.length === 0) {
-            console.warn('No posts found. Run "pnpm reset:data" to generate Ghost data first.');
+            console.warn('No posts found. Run "bun run reset:data" to generate Ghost data first.');
         }
 
         return true;
@@ -798,13 +798,13 @@ Options:
   count  - Number of events to generate (default: ${DEFAULT_EVENT_COUNT})
 
 Prerequisites:
-  - Docker environment running: pnpm dev:analytics
-  - Ghost database populated: pnpm reset:data
+  - Docker environment running: bun run dev:analytics
+  - Ghost database populated: bun run reset:data
 
 Examples:
-  pnpm data:analytics:generate          # Generate 10,000 events
-  pnpm data:analytics:generate 10000    # Generate 10,000 events
-  pnpm data:analytics:clear             # Clear all events
+  bun run data:analytics:generate          # Generate 10,000 events
+  bun run data:analytics:generate 10000    # Generate 10,000 events
+  bun run data:analytics:clear             # Clear all events
 `);
 }
 

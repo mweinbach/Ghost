@@ -60,8 +60,8 @@ typings/
 # Output of 'npm pack'
 *.tgz
 
-# pnpm store
-.pnpm-store
+# Bun cache
+.bun
 
 # dotenv environment variables file
 .env
@@ -114,7 +114,7 @@ typings/
 /ghost/core/LICENSE
 /ghost/core/PRIVACY.md
 /ghost/core/README.md
-/ghost/core/pnpm-lock.yaml
+/ghost/core/bun.lock
 
 # Test generated files
 test/functional/*.png
@@ -190,8 +190,8 @@ tsconfig.tsbuildinfo
 .diff_tmp
 temp*.sql
 
-# Docker pnpm Cache
-.pnpmhash
+# Docker Bun cache
+.bunhash
 
 # yalc — for linking local packages in a docker compatible way
 yalc.lock

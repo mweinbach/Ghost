@@ -8,9 +8,9 @@
  * subscriptions so the resolution rule (active > inactive, then most recent
  * created_at, then id ASC) can be observed end-to-end in the local admin.
  *
- * Run after `pnpm dev` is up:
+ * Run after `bun run dev` is up:
  *
- *   pnpm seed:multi-sub-scenarios
+ *   bun run seed:multi-sub-scenarios
  *
  * Idempotent — re-running deletes and re-creates the same set of members.
  * Members use the `multisub-*@verify.test` email convention so they're easy
@@ -31,7 +31,7 @@
  *   2. Run this script. It seeds members + customers + subscriptions only;
  *      the lookup-table refresh step is skipped when the table is absent:
  *
- *          pnpm seed:multi-sub-scenarios
+ *          bun run seed:multi-sub-scenarios
  *
  *   3. Apply the migrations forward. The backfill migration populates
  *      `members_current_subscription` from existing subscription data:
@@ -151,17 +151,17 @@ async function ensureProductAndPrice() {
     // a specific slug.
     const product = await knex('products').where({type: 'paid'}).first();
     if (!product) {
-        throw new Error('Could not find a paid product. Run `pnpm reset:data` first.');
+        throw new Error('Could not find a paid product. Run `bun run reset:data` first.');
     }
     const stripeProduct = await knex('stripe_products').where({product_id: product.id}).first();
     if (!stripeProduct) {
-        throw new Error(`Could not find a Stripe product for ${product.slug}. Run \`pnpm reset:data\` first.`);
+        throw new Error(`Could not find a Stripe product for ${product.slug}. Run \`bun run reset:data\` first.`);
     }
     const stripePrice = await knex('stripe_prices')
         .where({stripe_product_id: stripeProduct.stripe_product_id, type: 'recurring'})
         .first();
     if (!stripePrice) {
-        throw new Error('Could not find a recurring Stripe price. Run `pnpm reset:data` first.');
+        throw new Error('Could not find a recurring Stripe price. Run `bun run reset:data` first.');
     }
     return {product, stripeProduct, stripePrice};
 }

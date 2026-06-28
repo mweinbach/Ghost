@@ -46,33 +46,33 @@ Refer the [docs](https://ghost.org/help/setup-members/#customize-portal-settings
 
 Portal runs automatically when using Ghost's development command from the monorepo root:
 ```
-pnpm dev
+bun run dev
 ```
 
 This starts all frontend apps (including Portal.)
 ---
 
-To run Portal in a standalone fashion, use `pnpm preview` and open [http://localhost:3000](http://localhost:3000).
+To run Portal in a standalone fashion, use `bun run preview` and open [http://localhost:3000](http://localhost:3000).
 
 ## Build
 
 To create a production minified bundle in `umd/portal.min.js`:
 ```
-pnpm build
+bun run build
 ```
 
 ## Test
 
 To run tests in watch mode:
 ```
-pnpm test
+bun run test
 ```
 
 ### Ghost e2e tests
 
 Portal is primarily tested via Ghost's e2e Playwright tests in the `e2e/` directory. Run them from the monorepo root:
 ```
-pnpm test:e2e
+bun run test:e2e
 ```
 
 ## Release
@@ -85,12 +85,12 @@ In order to have Ghost's e2e tests run against the new code on CI or to test the
 
 ### Patch release
 
-1. Run `pnpm ship` and select a patch version when prompted
+1. Run `bun run ship` and select a patch version when prompted
 2. Merge the release commit to `main`
 
 ### Minor / major release
 
-1. Run `pnpm ship` and select a minor or major version when prompted
+1. Run `bun run ship` and select a minor or major version when prompted
 2. Merge the release commit to `main`
 3. Wait until a new version of Ghost is released
 

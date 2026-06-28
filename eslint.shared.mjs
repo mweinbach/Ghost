@@ -316,7 +316,7 @@ export const localFilenamesPlugin = {
  *   Workspace directory containing `tsconfig.json` for type-aware lint blocks.
  *   Only consulted when `legacyJsTsSplit: true`. Defaults to `process.cwd()`
  *   (works when ESLint is invoked from the workspace directory, which is the
- *   `pnpm --filter ... exec eslint` pattern).
+ *   `bun run --filter ... exec eslint` pattern).
  * @property {string[]} [ignores=['dist/**\/*']]
  *   Extra ignore globs (replaces the default — pass an array including your
  *   defaults).

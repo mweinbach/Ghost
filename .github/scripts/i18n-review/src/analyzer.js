@@ -64,7 +64,7 @@ const REVIEW_TOOL = {
     }
 };
 
-// `pnpm translate` seeds every non-English locale with empty `""` placeholders
+// `bun run translate` seeds every non-English locale with empty `""` placeholders
 // when new keys are added. Those additions trip the path-based `affects:i18n`
 // labeler but carry no translation to review, so we drop them here. Matches a
 // JSON entry whose value is an empty string, e.g. `    "Some key": "",`.

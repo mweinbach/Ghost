@@ -9,7 +9,7 @@ const LocalImagesStorage = require('../../../../../core/server/adapters/storage/
 const configUtils = require('../../../../utils/config-utils');
 
 // Resolve content paths from the ghost/core package root so assertions do not
-// assume process.cwd() === ghost/core (the unified `pnpm test:watch` runs from
+// assume process.cwd() === ghost/core (the unified `bun run test:watch` runs from
 // the repo root).
 const ghostCoreRoot = path.join(__dirname, '../../../../..');
 

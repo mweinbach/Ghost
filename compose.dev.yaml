@@ -58,11 +58,11 @@ services:
       dockerfile: docker/ghost-dev/Dockerfile
     container_name: ghost-dev
     working_dir: /home/ghost/ghost/core
-    command: ["pnpm", "dev"]
+    command: ["bun", "run", "dev"]
     volumes:
       # Keep the runtime workspace graph aligned with the packages installed
       # by docker/ghost-dev/Dockerfile. Mounting all of ghost/ exposes
-      # ghost/admin, which depends on apps/* and causes pnpm to repair the
+      # ghost/admin, which depends on apps/* and causes Bun to repair the
       # workspace before running scripts.
       - ./ghost/core:/home/ghost/ghost/core
       - ./ghost/i18n:/home/ghost/ghost/i18n
@@ -78,7 +78,6 @@ services:
       NODE_ENV: development
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
       DEBUG: ${DEBUG:-}
-      pnpm_config_verify_deps_before_run: "false"
       database__client: mysql2
       database__connection__host: mysql
       database__connection__user: root

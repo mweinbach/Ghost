@@ -1,0 +1,3 @@
+[install]
+minimumReleaseAge = 259200
+minimumReleaseAgeExcludes = ["@tryghost/*","bookshelf-relations","eslint-plugin-ghost","express-hbs","ghost-storage-base","gscan","knex-migrator","file-type@21.3.1 || 21.3.2"]

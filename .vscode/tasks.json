@@ -4,7 +4,7 @@
         {
             "label": "Ghost: Backend (nodemon)",
             "type": "shell",
-            "command": "pnpm --filter ghost dev",
+            "command": "bun run --filter ghost dev",
             "options": {"cwd": "${workspaceFolder}"},
             "isBackground": true,
             "presentation": {"panel": "dedicated", "group": "dev"},
@@ -13,7 +13,7 @@
         {
             "label": "Ghost: Frontend dev servers",
             "type": "shell",
-            "command": "pnpm nx run-many -t dev --projects=@tryghost/admin,@tryghost/portal,@tryghost/comments-ui,@tryghost/signup-form,@tryghost/sodo-search,@tryghost/announcement-bar",
+            "command": "bunx --no-install nx run-many -t dev --projects=@tryghost/admin,@tryghost/portal,@tryghost/comments-ui,@tryghost/signup-form,@tryghost/sodo-search,@tryghost/announcement-bar",
             "options": {"cwd": "${workspaceFolder}"},
             "isBackground": true,
             "presentation": {"panel": "dedicated", "group": "dev"},

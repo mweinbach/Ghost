@@ -6,21 +6,21 @@ Embed a Ghost signup form on any site.
 
 ### Pre-requisites
 
-- Run `pnpm` in Ghost monorepo root
-- Run `pnpm` in this directory
+- Run `bun install` in Ghost monorepo root
+- Run `bun install` in this directory
 
-### Running via Ghost `pnpm dev` in root folder
+### Running via Ghost `bun run dev` in root folder
 
 Signup Form runs automatically when using Ghost's development command from the monorepo root:
 ```bash
-pnpm dev
+bun run dev
 ```
 
 This starts all frontend apps (including Signup Form.)
 
 ### Running the development version only
 
-Run `pnpm dev` (in package folder) to start the development server to test/develop the form standalone. 
+Run `bun run dev` (in package folder) to start the development server to test/develop the form standalone.
 - This will generate a demo site on http://localhost:6173
 - This will build and watch the production build and host it on http://localhost:6174/signup-form.min.js (different port!)
 
@@ -36,15 +36,15 @@ This is a monorepo package.
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
-2. Run `pnpm` to install top-level dependencies.
+2. Run `bun install` to install top-level dependencies.
 
 ## Test
 
-- `pnpm lint` run just eslint
-- `pnpm test` run lint and tests
-- `pnpm test:e2e` run e2e tests on Chromium
-- `pnpm test:slowmo` run e2e tests visually (headed) and slower on Chromium
-- `pnpm test:e2e:full` run e2e tests on all browsers
+- `bun run lint` run just eslint
+- `bun run test` run lint and tests
+- `bun run test:e2e` run e2e tests on Chromium
+- `bun run test:slowmo` run e2e tests visually (headed) and slower on Chromium
+- `bun run test:e2e:full` run e2e tests on all browsers
 
 ## Release
 
@@ -53,12 +53,12 @@ In either case, you need sufficient permissions to release `@tryghost` packages 
 
 ### Patch release
 
-1. Run `pnpm ship` and select a patch version when prompted
+1. Run `bun run ship` and select a patch version when prompted
 2. Merge the release commit to `main`
 
 ### Minor / major release
 
-1. Run `pnpm ship` and select a minor or major version when prompted
+1. Run `bun run ship` and select a minor or major version when prompted
 2. Merge the release commit to `main`
 3. Wait until a new version of Ghost is released
 

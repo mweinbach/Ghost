@@ -104,7 +104,7 @@ For form controls, drive chrome through the `inputSurface` recipe — don't roll
 Most new components start from a ShadCN install:
 
 ```bash
-pnpm dlx shadcn@latest add <component-name>
+bunx shadcn@latest add <component-name>
 ```
 
 - **Never overwrite an existing Shade component** when the CLI prompts. Choose "No".
@@ -117,15 +117,15 @@ pnpm dlx shadcn@latest add <component-name>
 
 | Command | Purpose |
 |---|---|
-| `pnpm storybook` | Run Storybook locally (visual verification) |
-| `pnpm build` | Type declarations + Vite library build to `es/` |
-| `pnpm build-storybook` | Static Storybook export |
-| `pnpm test` | Type-check + Vitest with coverage |
-| `pnpm test:unit` | Unit tests only |
-| `pnpm test:types` | TS type-check only |
-| `pnpm lint` | ESLint (src + tests, `tailwindcss/*` rules enabled) |
+| `bun run storybook` | Run Storybook locally (visual verification) |
+| `bun run build` | Type declarations + Vite library build to `es/` |
+| `bun run build-storybook` | Static Storybook export |
+| `bun run test` | Type-check + Vitest with coverage |
+| `bun run test:unit` | Unit tests only |
+| `bun run test:types` | TS type-check only |
+| `bun run lint` | ESLint (src + tests, `tailwindcss/*` rules enabled) |
 
-Always run `pnpm lint` before committing.
+Always run `bun run lint` before committing.
 
 ## Testing expectations
 
@@ -135,7 +135,7 @@ Formal testing strategy is TBD. Interim rules:
 - Location: `test/unit/**/*.test.(ts|tsx|js)`.
 - Use `test/unit/utils/test-utils.tsx`'s `render` helper when a wrapper is needed.
 - For new UI components, prioritise comprehensive Storybook stories; add focused unit tests where they pay off (hooks, utils, logic-heavy parts).
-- No strict coverage threshold yet — just run `pnpm test` locally and keep it green.
+- No strict coverage threshold yet — just run `bun run test` locally and keep it green.
 
 ## Anti-patterns (don't do these)
 
@@ -179,7 +179,7 @@ Before marking a component done:
 - [ ] No hex values, no `bg-gray-200`-style raw palette utilities for UI chrome — semantic tokens only
 - [ ] No product-specific props on a generic Component
 - [ ] Story covers variants + states with one-line "when to use" descriptions
-- [ ] `pnpm lint`, `pnpm test`, and Storybook all clean
+- [ ] `bun run lint`, `bun run test`, and Storybook all clean
 
 ## Repo layout
 

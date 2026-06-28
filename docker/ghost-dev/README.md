@@ -21,15 +21,15 @@ This lightweight image:
 - Only installs dependencies
 - No frontend builds or bundling
 - Source code mounted at runtime 
-- Used for: Local development with `pnpm dev`
+- Used for: Local development with `bun run dev`
 
 ## Usage
 
 This image is used automatically when running:
 
 ```bash
-pnpm dev              # Starts Docker backend + frontend dev servers on host
-pnpm dev:analytics    # Include Tinybird analytics
-pnpm dev:storage      # Include MinIO S3-compatible object storage
-pnpm dev:all          # Include all optional services
+bun run dev              # Starts Docker backend + frontend dev servers on host
+bun run dev:analytics    # Include Tinybird analytics
+bun run dev:storage      # Include MinIO S3-compatible object storage
+bun run dev:all          # Include all optional services
 ```

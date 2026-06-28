@@ -5,7 +5,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const KnexMigrator = require('knex-migrator');
 // Resolve MigratorConfig.js from the package root explicitly rather than via
-// process.cwd(): the unified `pnpm test:watch` runs from the repo root, and
+// process.cwd(): the unified `bun run test:watch` runs from the repo root, and
 // worker threads cannot chdir. From ghost/core this is the same path, so it
 // is a no-op for the standalone mocha/vitest runs.
 const knexMigrator = new KnexMigrator({knexMigratorFilePath: path.join(__dirname, '../..')});

@@ -51,7 +51,7 @@ export function adminXPlaywrightConfig(overrides: Partial<PlaywrightTestConfig> 
 
         /* Run local dev server before starting the tests */
         webServer: {
-            command: `pnpm dev:start`,
+            command: `bun run dev:start`,
             url: `http://localhost:${E2E_PORT}`,
             reuseExistingServer: !process.env.CI,
             timeout: 10000

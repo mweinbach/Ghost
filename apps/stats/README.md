@@ -37,16 +37,16 @@ This app is part of the Ghost monorepo. After cloning the Ghost repository:
 
 ```bash
 # Install dependencies from the root directory
-pnpm
+bun install
 
-# Run pnpm dev in the root of the repo
-pnpm dev
+# Run bun run dev in the root of the repo
+bun run dev
 ```
 
 ### Build
 
 ```bash
-pnpm build
+bun run build
 ```
 
 This will create a production build in the `dist` directory.
@@ -55,29 +55,29 @@ This will create a production build in the `dist` directory.
 
 ```bash
 # Run all tests
-pnpm test
+bun run test
 
 # Run only unit tests
-pnpm test:unit
+bun run test:unit
 
 # Run tests in watch mode during development
-pnpm test:watch
+bun run test:watch
 
 # Run tests with coverage report
-pnpm test:coverage
+bun run test:coverage
 ```
 
 ### Linting
 
 ```bash
 # Lint all files
-pnpm lint
+bun run lint
 
 # Lint only source code
-pnpm lint:code
+bun run lint:code
 
 # Lint only test files
-pnpm lint:test
+bun run lint:test
 ```
 
 ## License

@@ -8,9 +8,9 @@ scripts where bundle size matters more than ecosystem compatibility.
 ## Development
 
 ```bash
-pnpm build    # one-off build
-pnpm dev      # build + preview with watch (started automatically by pnpm dev from root)
-pnpm test     # build + run tests against UMD bundle
+bun run build    # one-off build
+bun run dev      # build + preview with watch (started automatically by bun run dev from root)
+bun run test     # build + run tests against UMD bundle
 ```
 
 ## How it's served

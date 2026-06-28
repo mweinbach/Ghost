@@ -63,7 +63,7 @@ test('ignores English source locale files', async () => {
     assert.equal(anthropicCalled, false);
 });
 
-test('ignores empty-string placeholder additions seeded by `pnpm translate`', async () => {
+test('ignores empty-string placeholder additions seeded by `bun run translate`', async () => {
     let anthropicCalled = false;
     const octokit = createOctokit({
         files: [{

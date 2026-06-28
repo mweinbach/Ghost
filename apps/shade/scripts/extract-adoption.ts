@@ -10,7 +10,7 @@
  * Ember legacy summary and a public-apps count. Output is consumed by the
  * Storybook page at src/docs/adoption-dashboard.stories.tsx.
  *
- * Run with: pnpm --filter @tryghost/shade run adoption:extract
+ * Run with: bun run --filter @tryghost/shade adoption:extract
  *
  * Why regex instead of the TypeScript compiler API:
  *  - We only need to count files importing two specific packages and

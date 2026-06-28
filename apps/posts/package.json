@@ -29,13 +29,13 @@
         "dev:start": "vite",
         "build": "tsc && vite build",
         "test:unit": "vitest run",
-        "lint": "pnpm run lint:code && pnpm run lint:test",
+        "lint": "bun run lint:code && bun run lint:test",
         "lint:code": "eslint --cache src",
         "lint:code:fix": "eslint --cache --fix src",
         "lint:test": "eslint --cache test",
         "lint:fix": "eslint --cache src --fix",
         "preview": "vite preview",
-        "test": "pnpm test:unit --coverage"
+        "test": "bun run test:unit --coverage"
     },
     "devDependencies": {
         "@playwright/test": "catalog:",

@@ -8,33 +8,32 @@ const jsonc = require('jsonc-parser');
 const { execSync } = require('child_process');
 
 /**
- * Parse pnpm outdated --json output into an array of
+ * Parse Bun's `outdated` table into
  * [packageName, current, wanted, latest, dependencyType] tuples.
- *
- * pnpm's JSON output is an object keyed by package name:
- *   { "pkg": { "wanted": "1.0.1", "latest": "2.0.0", "dependencyType": "dependencies" } }
- *
- * pnpm's JSON output does not include a "current" field — "wanted"
- * represents the lockfile-resolved version, so we use it as current.
  */
-function parsePnpmOutdatedOutput(stdout) {
+function parseBunOutdatedOutput(stdout) {
   if (!stdout || !stdout.trim()) {
     return [];
   }
 
-  const data = JSON.parse(stdout);
-  return Object.entries(data).map(([name, info]) => [
-    name,
-    info.wanted,
-    info.wanted,
-    info.latest,
-    info.dependencyType
-  ]);
+  return stdout
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('|') && !line.includes('---') && !line.includes('Package'))
+    .map(line => line.split('|').map(cell => cell.trim()).filter(Boolean))
+    .filter(cells => cells.length >= 4)
+    .map(([name, current, wanted, latest]) => [
+      name,
+      current,
+      wanted,
+      latest,
+      'dependencies'
+    ]);
 }
 
 /**
  * Smart lockfile drift detector that focuses on actionable updates
- * and avoids API rate limits by using pnpm's built-in commands where possible
+ * and avoids API rate limits by using Bun's built-in commands where possible
  */
 
 class LockfileDriftDetector {
@@ -120,29 +119,9 @@ With a severity flag, shows all packages with that update type.
     const rootDir = path.join(__dirname, '../..');
     const rootPackage = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
 
-    // Read workspace patterns from pnpm-workspace.yaml (primary) or package.json (fallback)
-    let workspacePatterns = [];
-    const pnpmWorkspacePath = path.join(rootDir, 'pnpm-workspace.yaml');
-    if (fs.existsSync(pnpmWorkspacePath)) {
-      const content = fs.readFileSync(pnpmWorkspacePath, 'utf8');
-      let inPackages = false;
-      for (const line of content.split('\n')) {
-        if (/^packages:/.test(line)) {
-          inPackages = true;
-          continue;
-        }
-        if (inPackages) {
-          const match = line.match(/^\s+-\s+['"]?([^'"]+)['"]?\s*$/);
-          if (match) {
-            workspacePatterns.push(match[1]);
-          } else if (/^\S/.test(line)) {
-            break;
-          }
-        }
-      }
-    } else {
-      workspacePatterns = rootPackage.workspaces || [];
-    }
+    const workspacePatterns = Array.isArray(rootPackage.workspaces)
+      ? rootPackage.workspaces
+      : (rootPackage.workspaces?.packages || []);
 
     console.log('📦 Scanning workspaces...');
 
@@ -237,29 +216,24 @@ With a severity flag, shows all packages with that update type.
   }
 
   /**
-   * Use pnpm outdated to get comprehensive outdated info
+   * Use bun outdated to get comprehensive outdated info
    * This is much faster and more reliable than manual API calls
    */
   async getOutdatedPackages() {
-    console.log('🔄 Running pnpm outdated (this may take a moment)...');
+    console.log('🔄 Running bun outdated (this may take a moment)...');
 
     let stdout;
     try {
-      stdout = execSync('pnpm outdated --json', {
+      stdout = execSync('bun outdated --recursive', {
         encoding: 'utf8',
         maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large output
       });
     } catch (error) {
-      // pnpm outdated exits with code 1 when there are outdated packages
-      if (error.status === 1 && error.stdout) {
-        stdout = error.stdout;
-      } else {
-        console.error('Failed to run pnpm outdated:', error.message);
-        return [];
-      }
+      console.error('Failed to run bun outdated:', error.message);
+      return [];
     }
 
-    return parsePnpmOutdatedOutput(stdout);
+    return parseBunOutdatedOutput(stdout);
   }
 
   /**
@@ -460,7 +434,7 @@ With a severity flag, shows all packages with that update type.
       console.log('\n🚀 UPDATE COMMANDS:');
       console.log('─'.repeat(80));
       for (const pkg of filteredDirect) {
-        console.log(`   pnpm update ${pkg.name}@latest`);
+        console.log(`   bun update ${pkg.name}@latest`);
       }
     }
 
@@ -600,7 +574,7 @@ With a severity flag, shows all packages with that update type.
       console.log('🚀 SUGGESTED COMMANDS (highest impact first):');
       for (const pkg of topUpdates) {
         const impactNote = pkg.workspaceCount > 1 ? ` (affects ${pkg.workspaceCount} workspaces)` : '';
-        console.log(`   pnpm update ${pkg.name}@latest${impactNote}`);
+        console.log(`   bun update ${pkg.name}@latest${impactNote}`);
       }
       console.log('');
     }
@@ -635,7 +609,7 @@ With a severity flag, shows all packages with that update type.
   }
 
   /**
-   * Run pnpm audit and display a vulnerability summary
+   * Run bun audit and display a vulnerability summary
    */
   displayAuditSummary() {
     console.log('🔒 SECURITY AUDIT:\n');
@@ -643,12 +617,12 @@ With a severity flag, shows all packages with that update type.
     try {
       let stdout = '';
       try {
-        stdout = execSync('pnpm audit --json', {
+        stdout = execSync('bun audit --json', {
           encoding: 'utf8',
           maxBuffer: 10 * 1024 * 1024
         });
       } catch (error) {
-        // pnpm audit exits with non-zero when vulnerabilities are found
+        // bun audit exits with non-zero when vulnerabilities are found
         stdout = error.stdout || '';
       }
 

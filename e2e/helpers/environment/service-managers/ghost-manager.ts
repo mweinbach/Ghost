@@ -129,10 +129,10 @@ export class GhostManager {
                 `You are running in "build" mode, which requires a pre-built Docker image.\n` +
                 `For local development, "dev" mode is recommended instead.\n\n` +
                 `To fix this, either:\n` +
-                `  1. (Recommended) Run "pnpm dev" first, then re-run tests — dev mode is auto-detected and doesn't need this image\n` +
-                `  2. Build locally: pnpm --filter @tryghost/e2e build:docker (with GHOST_E2E_BASE_IMAGE set)\n` +
+                `  1. (Recommended) Run "bun run dev" first, then re-run tests — dev mode is auto-detected and doesn't need this image\n` +
+                `  2. Build locally: bun run --filter @tryghost/e2e build:docker (with GHOST_E2E_BASE_IMAGE set)\n` +
                 `  3. Pull from registry: docker pull ${BUILD_IMAGE}\n` +
-                `  4. Use a different image: GHOST_E2E_MODE=build GHOST_E2E_IMAGE=<image> pnpm --filter @tryghost/e2e test`
+                `  4. Use a different image: GHOST_E2E_MODE=build GHOST_E2E_IMAGE=<image> bun run --filter @tryghost/e2e test`
             );
         }
 
@@ -145,7 +145,7 @@ export class GhostManager {
                 `Build gateway image not found: ${BUILD_GATEWAY_IMAGE}\n\n` +
                 `To fix this, either:\n` +
                 `  1. Pull gateway image: docker pull ${BUILD_GATEWAY_IMAGE}\n` +
-                `  2. Use a different gateway image: GHOST_E2E_MODE=build GHOST_E2E_GATEWAY_IMAGE=<image> pnpm --filter @tryghost/e2e test`
+                `  2. Use a different gateway image: GHOST_E2E_MODE=build GHOST_E2E_GATEWAY_IMAGE=<image> bun run --filter @tryghost/e2e test`
             );
         }
 
@@ -258,10 +258,6 @@ export class GhostManager {
             `database__connection__database=${database}`,
             `url=http://localhost:${this.getGatewayPort()}`
         ];
-
-        if (this.config.mode === 'dev') {
-            env.push('pnpm_config_verify_deps_before_run=false');
-        }
 
         // Add Tinybird config if available
         // Static endpoints are set here; tokens are loaded from a host-generated

@@ -4,7 +4,7 @@
 #
 # Usage: ./benchmark-top-pages.sh [iterations]
 #
-# Prerequisites: pnpm dev:analytics
+# Prerequisites: bun run dev:analytics
 
 set -e
 
@@ -20,7 +20,7 @@ echo "============================================"
 # Get token
 TB_TOKEN=$(docker run --rm -v ghost-dev_shared-config:/config alpine cat /config/.env.tinybird 2>/dev/null | grep TINYBIRD_ADMIN_TOKEN | cut -d= -f2)
 if [ -z "$TB_TOKEN" ]; then
-    echo "Error: Could not find Tinybird token. Is pnpm dev:analytics running?"
+    echo "Error: Could not find Tinybird token. Is bun run dev:analytics running?"
     exit 1
 fi
 

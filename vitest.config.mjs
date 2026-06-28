@@ -2,9 +2,9 @@ import path from 'node:path';
 import {defineConfig} from 'vitest/config';
 
 // Root Vitest config — a single watcher across every Vitest-based package in
-// the monorepo. `pnpm test:watch` runs this. Each package is a project that
+// the monorepo. `bun run test:watch` runs this. Each package is a project that
 // keeps its own config (environment, setup, pool); scope to one with a path
-// filter, e.g. `pnpm test:watch apps/posts`.
+// filter, e.g. `bun run test:watch apps/posts`.
 //
 // Not included: ghost-admin (Ember Mocha, pending the Ember retirement).
 // admin-x-activitypub is a dead directory with no

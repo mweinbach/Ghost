@@ -56,7 +56,7 @@ export default defineConfig({
 
     /* Run local dev server before starting the tests */
     webServer: {
-        command: `pnpm dev:test`,
+        command: `bun run dev:test`,
         url: `http://localhost:${E2E_PORT}/comments-ui.min.js`,
         reuseExistingServer: !process.env.CI,
         timeout: 20000

@@ -13,19 +13,17 @@
     // Keep manually-closed immortal/grouped PRs closed unless explicitly
     // reopened from the Dependency Dashboard.
     "recreateWhen": "never",
-    // pnpm lockfile generation has been hitting Mend's 3GB memory ceiling.
+    // Bun lockfile generation has been hitting Mend's 3GB memory ceiling.
     // Renovate maintainers suggested starting with toolSettings.nodeMaxMemory
-    // set to 1024MB to reduce pnpm's Node heap usage and keep the overall job
+    // set to 1024MB to reduce Node heap usage and keep the overall job
     // under the hosted runner limit.
     "toolSettings": {
         "nodeMaxMemory": 1024
     },
-    // `pnpmDedupe` intentionally NOT in postUpdateOptions — Renovate dedupes
-    // on its Linux runner, but `pnpm install` on macOS produces a different
-    // lockfile (platform-sensitive peer-suffix resolution), so every stale
-    // Renovate branch fails --frozen-lockfile. Upstream: pnpm/pnpm#10258,
-    // renovatebot/renovate#31867. Ad-hoc `pnpm dedupe` PR or scheduled
-    // lockFileMaintenance when bloat becomes a problem.
+    // Lockfile dedupe is intentionally NOT in postUpdateOptions. Renovate can
+    // dedupe on its Linux runner, but `bun install` on macOS can still produce
+    // platform-sensitive lockfile differences, so keep lockfile cleanup as a
+    // separate manual or scheduled maintenance task when bloat becomes a problem.
     // We have to disable platform based automerge (forcing renovate to do it manually)
     // as otherwise renovate wont follow our schedule
     "platformAutomerge": false,
@@ -171,7 +169,7 @@
         // Security note: GitHub Dependabot alerts for admin deps still fire (they
         // are independent of Renovate) — we lose only Renovate's auto-fix PR. Given
         // the app is slated for removal, remediate any rare real incident with a
-        // `pnpm overrides` pin. Today's admin-exclusive advisories are all
+        // `overrides` pin. Today's admin-exclusive advisories are all
         // build-time or verified-not-shipped (see docs/ember-dependency-burden.md).
         "ghost/admin/**"
     ],
@@ -398,7 +396,7 @@
         // These are published by us but live outside the @tryghost/ npm scope,
         // so they miss the shared preset's "0 days" trusted-package exemption
         // and would otherwise soak for 72h like third-party releases. Mirrors
-        // the pnpm-workspace.yaml minimumReleaseAgeExclude list. knex-migrator
+        // the package.json minimumReleaseAgeExclude list. knex-migrator
         // is currently in ignoreDeps, but is listed for when that's lifted.
         // Deliberately NOT listed: sqlite3 — TryGhost stewards it, but legacy
         // (Mapbox-era) npm maintainer accounts can still publish, so the soak
@@ -416,15 +414,15 @@
             "minimumReleaseAge": "0 days"
         },
 
-        // Group each pinned-version pnpm catalog into a single PR per catalog.
+        // Group each pinned-version Bun catalog into a single PR per catalog.
         //
-        // The named catalogs in pnpm-workspace.yaml (react17, eslint9,
+        // The named catalogs in package.json (react17, eslint9,
         // tailwind3) each hold a version lane we deliberately keep separate
         // from the main `catalog:` — e.g. eslint 9 lives in `eslint9` while the
         // default catalog stays on eslint 8. Renovate tags every catalog dep
-        // with a depType of `pnpm.catalog.<name>`, so matching the depType
+        // with a depType of `bun.catalog.<name>`, so matching the depType
         // groups the whole catalog without restating its package list and stays
-        // correct as entries are added or removed in pnpm-workspace.yaml.
+        // correct as entries are added or removed in package.json.
         //
         // These also override the shared preset's `group:monorepos` rules,
         // which would otherwise group e.g. eslint + @eslint/js *by name* and
@@ -436,15 +434,15 @@
         // let one risky update block the rest.
         {
             "groupName": "react17 catalog",
-            "matchDepTypes": ["pnpm.catalog.react17"]
+            "matchDepTypes": ["bun.catalog.react17"]
         },
         {
             "groupName": "eslint9 catalog",
-            "matchDepTypes": ["pnpm.catalog.eslint9"]
+            "matchDepTypes": ["bun.catalog.eslint9"]
         },
         {
             "groupName": "tailwind3 catalog",
-            "matchDepTypes": ["pnpm.catalog.tailwind3"]
+            "matchDepTypes": ["bun.catalog.tailwind3"]
         },
 
         // Always automerge these packages:
@@ -519,7 +517,7 @@
         // "trust whatever upstream publishes next" — the exact attack class
         // SHA-pinning defends against (codecov 2021, tj-actions 2025). Keep
         // own-org and GitHub-owned actions automerging; bumps to everything
-        // else (codecov, docker, pnpm, peter-evans, ...) wait for a human
+        // else (codecov, docker, Bun, peter-evans, ...) wait for a human
         // review per GitHub's Actions hardening guidance. Placed before the
         // security-update rule below so vulnerability-alert action bumps can
         // still automerge.

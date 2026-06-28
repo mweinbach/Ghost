@@ -11,29 +11,12 @@ function shellQuote(value) {
     return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
-// Parse the `packages:` list from pnpm-workspace.yaml. We only need the simple
-// glob shapes pnpm allows here (`apps/*`, `ghost/*`, `e2e`); anything fancier
-// would warrant a real YAML parser.
 function loadWorkspacePatterns() {
-    const yaml = fs.readFileSync(path.join(ROOT, 'pnpm-workspace.yaml'), 'utf8');
-    const lines = yaml.split('\n');
-    const start = lines.findIndex(line => /^packages:\s*$/.test(line));
-    if (start === -1) {
-        return [];
+    const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+    if (Array.isArray(packageJson.workspaces)) {
+        return packageJson.workspaces;
     }
-    const patterns = [];
-    for (let i = start + 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (/^\s+-\s+/.test(line)) {
-            const match = line.match(/^\s+-\s+['"]?([^'"\s]+)['"]?\s*$/);
-            if (match) {
-                patterns.push(match[1]);
-            }
-        } else if (line.trim() !== '' && !/^\s/.test(line)) {
-            break;
-        }
-    }
-    return patterns;
+    return packageJson.workspaces?.packages || [];
 }
 
 function expandPattern(pattern) {
@@ -86,8 +69,8 @@ function buildCommand(workspace, files) {
         .map(file => normalize(path.relative(base, file)))
         .map(shellQuote)
         .join(' ');
-    const dirArg = workspace ? `--dir ${shellQuote(workspace)} ` : '';
-    return `pnpm ${dirArg}exec eslint --cache -- ${relativeFiles}`;
+    const prefix = workspace ? `cd ${shellQuote(workspace)} && ` : '';
+    return `${prefix}bunx --no-install eslint --cache -- ${relativeFiles}`;
 }
 
 module.exports = {

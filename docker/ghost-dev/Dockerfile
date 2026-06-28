@@ -2,8 +2,12 @@
 # Source code is mounted at runtime for hot-reload support
 
 ARG NODE_VERSION=22.18.0
+ARG BUN_VERSION=1.3.14
 
 FROM node:$NODE_VERSION-bullseye-slim
+
+ENV BUN_INSTALL=/usr/local/bun
+ENV PATH="${BUN_INSTALL}/bin:${PATH}"
 
 # Install system dependencies needed for building native modules
 RUN apt-get update && \
@@ -12,13 +16,14 @@ RUN apt-get update && \
     curl \
     python3 \
     git && \
+    curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}" && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
 
 WORKDIR /home/ghost
 
 # Copy package files for dependency installation
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock bunfig.toml ./
 COPY ghost/core/package.json ghost/core/package.json
 COPY ghost/i18n/package.json ghost/i18n/package.json
 COPY ghost/parse-email-address/package.json ghost/parse-email-address/package.json
@@ -26,16 +31,13 @@ COPY ghost/parse-email-address/package.json ghost/parse-email-address/package.js
 # Install dependencies
 # Note: Dependencies are installed at build time, but source code is mounted at runtime.
 
-# Copy root lifecycle scripts/hooks needed by `pnpm install`
+# Copy root lifecycle scripts/hooks needed by `bun install`
 COPY .github/scripts .github/scripts
 COPY .github/hooks .github/hooks
 
-# Enable corepack so it can read packageManager from package.json and provide pnpm
-RUN corepack enable
-
-# Install deps with a persistent pnpm store cache to speed up rebuilds
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store,id=pnpm-store \
-    pnpm install --frozen-lockfile --prefer-offline
+# Install deps with a persistent Bun cache to speed up rebuilds
+RUN --mount=type=cache,target=/root/.bun/install/cache,id=bun-cache \
+    bun install --frozen-lockfile --prefer-offline
 
 # Copy entrypoint script that optionally loads Tinybird config
 COPY docker/ghost-dev/entrypoint.sh entrypoint.sh
@@ -56,4 +58,4 @@ ENV portal__url=/ghost/assets/portal/portal.min.js \
 WORKDIR /home/ghost/ghost/core
 
 ENTRYPOINT ["/home/ghost/entrypoint.sh"]
-CMD ["pnpm", "dev"]
+CMD ["bun", "run", "dev"]

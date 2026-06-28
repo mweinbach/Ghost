@@ -41,4 +41,4 @@ docker run --rm --network host --ipc host \
   -e GHOST_E2E_GATEWAY_IMAGE="${GHOST_E2E_GATEWAY_IMAGE:-caddy:2-alpine}" \
   -e GHOST_E2E_ANALYTICS="${GHOST_E2E_ANALYTICS:-true}" \
   "$PLAYWRIGHT_IMAGE" \
-  bash -c "corepack enable && bash ./scripts/run-playwright-host.sh pnpm exec playwright test ${project_args_string}--shard=${SHARD_INDEX}/${SHARD_TOTAL} --retries=${RETRIES}"
+  bash -c "curl -fsSL https://bun.sh/install | bash -s 'bun-v1.3.14' >/dev/null && export BUN_INSTALL=\$HOME/.bun && export PATH=\$BUN_INSTALL/bin:\$PATH && bash ./scripts/run-playwright-host.sh bunx playwright test ${project_args_string}--shard=${SHARD_INDEX}/${SHARD_TOTAL} --retries=${RETRIES}"

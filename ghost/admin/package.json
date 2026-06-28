@@ -18,11 +18,11 @@
   "scripts": {
     "dev": "ember serve",
     "build": "ember build --environment=production --silent",
-    "build:dev": "pnpm build --environment=development",
+    "build:dev": "bun run build --environment=development",
     "test": "ember exam --split 2 --parallel",
     "lint:js": "eslint . --cache",
     "lint:hbs": "ember-template-lint .",
-    "lint": "pnpm lint:js && pnpm lint:hbs"
+    "lint": "bun run lint:js && bun run lint:hbs"
   },
   "engines": {
     "node": "^22.18.0"

@@ -8,14 +8,18 @@
 # Build context: extracted `npm pack` output from ghost/core
 
 ARG NODE_VERSION=22.18.0
+ARG BUN_VERSION=1.3.14
 
 # ---- Core: server + production deps ----
 FROM node:$NODE_VERSION-bookworm-slim AS core
 
 ENV NODE_ENV=production
+ENV BUN_INSTALL=/usr/local/bun
+ENV PATH="${BUN_INSTALL}/bin:${PATH}"
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libjemalloc2 fontconfig && \
+    apt-get install -y --no-install-recommends libjemalloc2 fontconfig curl ca-certificates && \
+    curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}" && \
     rm -rf /var/lib/apt/lists/* && \
     groupmod -g 1001 node && \
     usermod -u 1001 node && \
@@ -23,17 +27,15 @@ RUN apt-get update && \
 
 WORKDIR /home/ghost
 
-RUN corepack enable
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json bun.lock bunfig.toml ./
 COPY components ./components
 
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store,id=pnpm-store \
+RUN --mount=type=cache,target=/root/.bun/install/cache,id=bun-cache \
     apt-get update && \
     apt-get install -y --no-install-recommends build-essential python3 && \
-    pnpm install --ignore-scripts --prod --prefer-offline && \
+    bun install --ignore-scripts --production --prefer-offline && \
     (cd node_modules/sqlite3 && npm run install) && \
-    apt-get purge -y build-essential python3 && \
+    apt-get purge -y build-essential python3 curl && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -55,7 +57,7 @@ ENV LD_PRELOAD=libjemalloc.so.2
 
 EXPOSE 2368
 
-CMD ["node", "index.js"]
+CMD ["bun", "index.js"]
 
 # ---- Full: core + admin ----
 FROM core AS full

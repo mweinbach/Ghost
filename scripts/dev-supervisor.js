@@ -8,7 +8,7 @@ const {spawn, spawnSync} = require('child_process');
 const rootDir = path.resolve(__dirname, '..');
 const stateDir = path.join(rootDir, '.ghost-dev');
 const stateFile = path.join(stateDir, 'dev-supervisor.json');
-const pnpmBin = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const bunBin = process.platform === 'win32' ? 'bun.cmd' : 'bun';
 
 function ensureStateDir() {
     fs.mkdirSync(stateDir, {recursive: true});
@@ -126,7 +126,8 @@ function psOutput() {
 function printMatchingProcesses() {
     const repoPids = repoProcessIds();
     const patterns = [
-        'pnpm .*dev',
+        'bun .*dev',
+        'bunx .*dev',
         'nx',
         'vite',
         'ember',
@@ -176,7 +177,7 @@ function repoProcessIds() {
 }
 
 function printNxDaemonStatus() {
-    const result = spawnSync(pnpmBin, ['nx', 'daemon'], {
+    const result = spawnSync(bunBin, ['x', '--no-install', 'nx', 'daemon'], {
         cwd: rootDir,
         encoding: 'utf8',
         env: process.env
@@ -259,7 +260,7 @@ function status() {
 }
 
 function start() {
-    const args = ['nx', 'run', 'ghost-monorepo:docker:dev'];
+    const args = ['x', '--no-install', 'nx', 'run', 'ghost-monorepo:docker:dev'];
     const env = {
         ...process.env
     };
@@ -268,9 +269,9 @@ function start() {
         env.NX_DAEMON = 'false';
     }
 
-    printCommand(pnpmBin, args, env);
+    printCommand(bunBin, args, env);
 
-    const child = spawn(pnpmBin, args, {
+    const child = spawn(bunBin, args, {
         cwd: rootDir,
         detached: process.platform !== 'win32',
         env,
@@ -288,7 +289,7 @@ function start() {
         platform: `${os.platform()}-${os.arch()}`,
         supervisorPid: process.pid,
         childPid: child.pid,
-        command: pnpmBin,
+        command: bunBin,
         args,
         nxDaemon: env.NX_DAEMON === 'false' ? 'disabled' : 'default'
     });

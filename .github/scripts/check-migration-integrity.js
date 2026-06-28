@@ -109,7 +109,7 @@ function checkOrphanedFolders(safeVersion) {
 
     if (orphaned.length > 0) {
         return `Migration folders exceed package.json version (${safeVersion.raw}, safe: ${safeVersion.safe}): ${orphaned.join(', ')}\n` +
-            'Run `pnpm migrate:create <slug>` from ghost/core (ghost/core/bin/create-migration.js handles the version bump automatically), ' +
+            'Run `bun run migrate:create <slug>` from ghost/core (ghost/core/bin/create-migration.js handles the version bump automatically), ' +
             'or manually bump package.json to the next minor rc.';
     }
     return null;
@@ -185,7 +185,7 @@ function checkStalePlacements(safeVersion, lastPublishedMinor, baseSha, compareS
         return `New migration(s) added to already-released version folders:\n${fileList}\n\n` +
             `${versionContext}\n` +
             'Migrations in older folders will not run for users who have already migrated past that version.\n' +
-            'Run `pnpm migrate:create <slug>` from ghost/core to create new migrations in the correct folder.';
+            'Run `bun run migrate:create <slug>` from ghost/core to create new migrations in the correct folder.';
     }
 
     return null;

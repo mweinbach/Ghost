@@ -21,7 +21,7 @@ services:
     # running the backend the original way.
     volumes:
       - ./:/workspaces/Ghost:cached
-    # Override the default `pnpm dev` command. VS Code controls startup and the
+    # Override the default `bun run dev` command. VS Code controls startup and the
     # user runs backend/frontend dev servers as tasks (see .vscode/tasks.json).
     command: ["sleep", "infinity"]
     working_dir: /workspaces/Ghost

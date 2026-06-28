@@ -9,7 +9,7 @@ import {isConsoleAllowed, resetConsoleAllowed} from './console-guard';
 // Register tsx's CommonJS hook so test files (and the Ghost server code they
 // pull in) can require() .ts sources. Scoping it here — rather than a global
 // NODE_OPTIONS='--import tsx' — keeps the loader out of the sibling app
-// projects under the unified `pnpm test:watch`, where it breaks their module
+// projects under the unified `bun run test:watch`, where it breaks their module
 // resolution. Must run before any Ghost source is required below.
 require('tsx/cjs');
 

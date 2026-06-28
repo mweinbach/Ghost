@@ -11,22 +11,22 @@ This guide provides instructions for writing E2E tests in the `/e2e/` directory 
 cd e2e
 
 # Run all tests
-pnpm test
+bun run test
 
 # Run specific test file
-pnpm test tests/admin/feature.test.ts
+bun run test tests/admin/feature.test.ts
 
 # Run with visible browser (debugging)
-pnpm test --debug
+bun run test --debug
 
 # Run with specific timeout
-pnpm test --timeout=60000
+bun run test --timeout=60000
 
 # Keep environment running after test (useful for Playwright MCP exploration)
-PRESERVE_ENV=true pnpm test
+PRESERVE_ENV=true bun run test
 
 # Enable debug logging
-DEBUG=@tryghost/e2e:* pnpm test
+DEBUG=@tryghost/e2e:* bun run test
 ```
 
 ## Test Organization
@@ -378,7 +378,7 @@ When creating new Page Objects or discovering selectors for unfamiliar UI:
 ### 1. Start Ghost with Preserved Environment
 ```bash
 # Start Ghost and keep it running
-PRESERVE_ENV=true pnpm test
+PRESERVE_ENV=true bun run test
 
 # The test will output the Ghost instance URL (usually http://localhost:2369)
 ```
@@ -409,25 +409,25 @@ Based on your exploration, create the Page Object with discovered selectors:
 ### Debug Mode
 ```bash
 # See browser while test runs
-pnpm test --debug
+bun run test --debug
 
 # UI mode for interactive debugging
-pnpm test --ui
+bun run test --ui
 ```
 
 ### Debug Logging
 ```bash
 # Enable all e2e debug logs
-DEBUG=@tryghost/e2e:* pnpm test
+DEBUG=@tryghost/e2e:* bun run test
 
 # Specific debug namespace
-DEBUG=@tryghost/e2e:ghost-fixture pnpm test
+DEBUG=@tryghost/e2e:ghost-fixture bun run test
 ```
 
 ### Preserve Environment
 ```bash
 # Keep containers running after test
-PRESERVE_ENV=true pnpm test
+PRESERVE_ENV=true bun run test
 ```
 
 ### Test Artifacts
@@ -489,10 +489,10 @@ test.describe('Feature', () => {
 
 ### Run Commands
 ```bash
-pnpm test                           # All tests
-pnpm test path/to/test.ts          # Specific test
-pnpm test --debug                   # With browser
-pnpm test --grep "pattern"         # Pattern matching
-PRESERVE_ENV=true pnpm test         # Keep environment
-DEBUG=@tryghost/e2e:* pnpm test     # Debug logs
+bun run test                           # All tests
+bun run test path/to/test.ts          # Specific test
+bun run test --debug                   # With browser
+bun run test --grep "pattern"         # Pattern matching
+PRESERVE_ENV=true bun run test         # Keep environment
+DEBUG=@tryghost/e2e:* bun run test     # Debug logs
 ```

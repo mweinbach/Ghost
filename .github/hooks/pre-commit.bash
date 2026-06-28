@@ -8,7 +8,7 @@ no_color='\033[0m'
 grey='\033[0;90m'
 red='\033[0;31m'
 
-pnpm lint-staged --relative
+bun run lint-staged --relative
 lintStatus=$?
 
 if [ $lintStatus -ne 0 ]; then
@@ -26,8 +26,8 @@ scan_staged_secrets() {
     local scan_status=0
     local tmpfile
 
-    if ! pnpm exec secretlint --version >/dev/null 2>&1; then
-        echo -e "${red}secretlint is not available. Run pnpm install from the repository root.${no_color}"
+    if ! bunx secretlint --version >/dev/null 2>&1; then
+        echo -e "${red}secretlint is not available. Run bun install from the repository root.${no_color}"
         return 1
     fi
 
@@ -47,7 +47,7 @@ scan_staged_secrets() {
         if LC_ALL=C grep -Iq . "$tmpfile"; then
             files_scanned=$((files_scanned + 1))
 
-            if ! pnpm exec secretlint --format=compact --stdinFileName="$file" < "$tmpfile"; then
+            if ! bunx secretlint --format=compact --stdinFileName="$file" < "$tmpfile"; then
                 scan_status=1
             fi
         fi

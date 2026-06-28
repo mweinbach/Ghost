@@ -306,7 +306,7 @@ class DataGenerator {
         // members_stripe_customers_subscriptions; they don't go through the
         // linkSubscription path that normally maintains this lookup. Without
         // this step, `subscriptions.*` filters return no results after
-        // `pnpm reset:data` even though subscriptions exist. See BER-3345.
+        // `bun run reset:data` even though subscriptions exist. See BER-3345.
         //
         // We clear the table before re-inserting because clearData doesn't
         // truncate it (it's a computed table with no importer) and the

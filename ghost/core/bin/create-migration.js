@@ -128,7 +128,7 @@ if (require.main === module) {
     const slug = process.argv[2];
 
     if (!slug) {
-        console.error('Usage: pnpm migrate:create <slug>');
+        console.error('Usage: bun run migrate:create <slug>');
         console.error('  slug: kebab-case migration name (e.g. add-column-to-posts)');
         process.exit(1);
     }
