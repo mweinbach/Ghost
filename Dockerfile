@@ -50,8 +50,11 @@ WORKDIR /src
 # so admin + assets are always built fresh rather than trusting host artifacts.
 COPY . .
 
-# Install with the committed lockfile, mirroring CI (`bun install --frozen-lockfile`).
-RUN bun install --frozen-lockfile
+# Install with the committed lockfile, mirroring CI. Force the hoisted (npm-like
+# flat) node_modules layout so build-time deps that the admin's postcss/vite
+# configs require transitively (e.g. postcss-import) resolve from any workspace
+# package — the default linker leaves them unresolvable on a clean build.
+RUN bun install --frozen-lockfile --linker=hoisted
 
 # Mirror CI exactly: build server (tsc) + public assets + admin, then archive.
 # `bun run --filter ghost archive` runs scripts/pack.js directly (not via nx),
@@ -85,7 +88,7 @@ COPY --from=builder /src/ghost/core/package/components ./components
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential python3 && \
-    bun install --ignore-scripts --production --prefer-offline && \
+    bun install --ignore-scripts --production --prefer-offline --linker=hoisted && \
     (cd node_modules/sqlite3 && npm run install) && \
     apt-get purge -y build-essential python3 curl && \
     apt-get autoremove -y && \
