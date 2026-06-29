@@ -69,11 +69,11 @@ RUN cd ghost/core/core/server/services/url && \
     (bunx --bun tsc *.ts --outDir /tmp/urljs --rootDir . --module commonjs \
         --target es2022 --moduleResolution node --esModuleInterop \
         --skipLibCheck --resolveJsonModule || true) && \
-    for f in *.ts; do b="${f%.ts}"; \
-        if [ -f "/tmp/urljs/$b.js" ]; then mv "/tmp/urljs/$b.js" "$b.js" && rm -f "$f"; fi; \
-    done && \
+    (cp -f /tmp/urljs/*.js ./ 2>/dev/null || true) && \
     rm -rf /tmp/urljs && \
-    echo "url-service .ts compiled to CJS .js:" && ls *.js
+    for f in *.ts; do [ -f "${f%.ts}.js" ] && rm -f "$f"; done; \
+    echo "url dir after .ts removal:" && ls && \
+    if ls *.ts >/dev/null 2>&1; then echo "WARNING: .ts remain"; fi
 
 # Runtime: Ghost boots from ghost/core (its index.js), resolving workspace and
 # hoisted deps from the monorepo node_modules.
