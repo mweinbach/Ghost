@@ -358,7 +358,10 @@ module.exports = {
     sessions: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
         session_id: {type: 'string', maxlength: 32, nullable: false, unique: true},
-        user_id: {type: 'string', maxlength: 24, nullable: false},
+        // Nullable: staff OAuth (SSO) persists a pre-auth session holding only the
+        // PKCE state during /session/oauth/start, before any user exists. See
+        // migration 2026-06-29-22-00-00-sessions-nullable-user-id.
+        user_id: {type: 'string', maxlength: 24, nullable: true},
         session_data: {type: 'string', maxlength: 2000, nullable: false},
         created_at: {type: 'dateTime', nullable: false},
         updated_at: {type: 'dateTime', nullable: true}
