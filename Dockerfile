@@ -51,8 +51,7 @@ WORKDIR /src
 COPY . .
 
 # Install with the committed lockfile, mirroring CI (`bun install --frozen-lockfile`).
-RUN --mount=type=cache,target=/root/.bun/install/cache,id=bun-cache \
-    bun install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 # Mirror CI exactly: build server (tsc) + public assets + admin, then archive.
 # `bun run --filter ghost archive` runs scripts/pack.js directly (not via nx),
@@ -84,8 +83,7 @@ WORKDIR /home/ghost
 COPY --from=builder /src/ghost/core/package/package.json /src/ghost/core/package/bun.lock /src/ghost/core/package/bunfig.toml ./
 COPY --from=builder /src/ghost/core/package/components ./components
 
-RUN --mount=type=cache,target=/root/.bun/install/cache,id=bun-cache \
-    apt-get update && \
+RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential python3 && \
     bun install --ignore-scripts --production --prefer-offline && \
     (cd node_modules/sqlite3 && npm run install) && \
