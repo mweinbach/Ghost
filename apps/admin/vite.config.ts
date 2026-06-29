@@ -51,6 +51,14 @@ export default defineConfig(({ command }) => ({
         allowedHosts: true
     },
     resolve: {
+        // Force a single React/React-DOM copy across the whole admin bundle. The
+        // admin (React 18) bundles workspace deps (posts/stats/admin-x-settings/
+        // shade/...) that each `import "react"` and rely on the consumer to supply
+        // it. Under bun's isolated install every package resolves "react" to its own
+        // node_modules path, so without dedupe Vite bundles multiple React copies —
+        // and a hook that resolves a different copy's (null) dispatcher throws
+        // "Invalid hook call" (minified React error #321), crashing the admin.
+        dedupe: ["react", "react-dom"],
         alias: {
             "@ghost-cards": GHOST_CARDS_PATH,
             // TODO: Remove this when @tryghost/nql is updated

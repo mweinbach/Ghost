@@ -51,12 +51,18 @@ RUN if [ ! -f ghost/core/content/themes/casper/package.json ]; then \
         rm -rf ghost/core/content/themes/source/.git; \
     fi
 
-# Install ALL deps (dev included — the admin build needs them) with the hoisted
-# layout so the admin's postcss/vite configs can resolve transitive build deps
-# like postcss-import. NODE_ENV=development guarantees devDependencies install.
-# Then build the server (tsc), public assets, and the admin SPA — the admin
-# target emits ghost/core/core/built/admin, which Ghost serves in production.
-RUN NODE_ENV=development bun install --frozen-lockfile --linker=hoisted && \
+# Install ALL deps (dev included — the admin build needs devDependencies such as
+# postcss-import). Use bun's DEFAULT **isolated** linker — do NOT force
+# --linker=hoisted. The monorepo's catalogs deliberately pin React 18 for the admin
+# (apps/admin) and React 17 for the public widgets (portal/comments-ui/sodo-search/
+# announcement-bar). Isolated linking keeps each version in its own per-package
+# node_modules; hoisting flattens them and leaks React 17 into the React 18 admin
+# bundle, which then crashes the admin with "Invalid hook call" (minified React
+# error #321) the moment a hook runs. This matches Ghost's CI (`bun install
+# --frozen-lockfile`, default linker). NODE_ENV=development guarantees devDeps
+# install. Then build the server (tsc), public assets, and the admin SPA — the
+# admin target emits ghost/core/core/built/admin, which Ghost serves in production.
+RUN NODE_ENV=development bun install --frozen-lockfile && \
     bun run build:production
 
 # The fork's URL-service .ts files mix `export` (ESM) with `module.exports` (CJS).
