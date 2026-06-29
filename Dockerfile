@@ -69,11 +69,13 @@ RUN cd ghost/core/core/server/services/url && \
     (bunx --bun tsc *.ts --outDir /tmp/urljs --rootDir . --module commonjs \
         --target es2022 --moduleResolution node --esModuleInterop \
         --skipLibCheck --resolveJsonModule || true) && \
-    (cp -f /tmp/urljs/*.js ./ 2>/dev/null || true) && \
+    for f in *.ts; do b="${f%.ts}"; \
+        if [ -f "/tmp/urljs/$b.js" ]; then cp -f "/tmp/urljs/$b.js" "$f"; \
+        elif [ -f "$b.js" ]; then cp -f "$b.js" "$f"; fi; \
+    done && \
     rm -rf /tmp/urljs && \
-    for f in *.ts; do [ -f "${f%.ts}.js" ] && rm -f "$f"; done; \
-    echo "url dir after .ts removal:" && ls && \
-    if ls *.ts >/dev/null 2>&1; then echo "WARNING: .ts remain"; fi
+    echo "url-service .ts files rewritten as CommonJS (no deletion / whiteout)"; \
+    if grep -lE "^export |^import " *.ts >/dev/null 2>&1; then echo "WARNING: ESM syntax remains in:"; grep -lE "^export |^import " *.ts; else echo "OK: all url .ts are CJS"; fi
 
 # Runtime: Ghost boots from ghost/core (its index.js), resolving workspace and
 # hoisted deps from the monorepo node_modules.
