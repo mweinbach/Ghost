@@ -2,6 +2,7 @@ const ghostVersion = require('@tryghost/version');
 const settingsCache = require('../../../shared/settings-cache');
 const config = require('../../../shared/config');
 const urlUtils = require('../../../shared/url-utils');
+const {getPublicConfig: getPublicOAuthConfig} = require('../auth/session/oauth-config');
 
 module.exports = function getSiteProperties() {
     const siteProperties = {
@@ -15,7 +16,10 @@ module.exports = function getSiteProperties() {
         url: urlUtils.urlFor('home', true),
         version: ghostVersion.safe,
         allow_external_signup: settingsCache.get('allow_self_signup') && !(settingsCache.get('portal_signup_checkbox_required') && settingsCache.get('portal_signup_terms_html')),
-        site_uuid: settingsCache.get('site_uuid')
+        site_uuid: settingsCache.get('site_uuid'),
+        staffAuth: {
+            oauth: getPublicOAuthConfig(config)
+        }
     };
 
     if (config.get('client_sentry') && !config.get('client_sentry').disabled) {

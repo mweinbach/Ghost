@@ -6,6 +6,8 @@ ARG BUN_VERSION=1.3.14
 
 FROM node:$NODE_VERSION-bullseye-slim
 
+ARG BUN_VERSION
+
 ENV BUN_INSTALL=/usr/local/bun
 ENV PATH="${BUN_INSTALL}/bin:${PATH}"
 
@@ -15,6 +17,7 @@ RUN apt-get update && \
     build-essential \
     curl \
     python3 \
+    unzip \
     git && \
     curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}" && \
     rm -rf /var/lib/apt/lists/* && \
@@ -24,6 +27,22 @@ WORKDIR /home/ghost
 
 # Copy package files for dependency installation
 COPY package.json bun.lock bunfig.toml ./
+COPY apps/activitypub/package.json apps/activitypub/package.json
+COPY apps/admin/package.json apps/admin/package.json
+COPY apps/admin-toolbar/package.json apps/admin-toolbar/package.json
+COPY apps/admin-x-design-system/package.json apps/admin-x-design-system/package.json
+COPY apps/admin-x-framework/package.json apps/admin-x-framework/package.json
+COPY apps/admin-x-settings/package.json apps/admin-x-settings/package.json
+COPY apps/announcement-bar/package.json apps/announcement-bar/package.json
+COPY apps/comments-ui/package.json apps/comments-ui/package.json
+COPY apps/portal/package.json apps/portal/package.json
+COPY apps/posts/package.json apps/posts/package.json
+COPY apps/shade/package.json apps/shade/package.json
+COPY apps/signup-form/package.json apps/signup-form/package.json
+COPY apps/sodo-search/package.json apps/sodo-search/package.json
+COPY apps/stats/package.json apps/stats/package.json
+COPY e2e/package.json e2e/package.json
+COPY ghost/admin/package.json ghost/admin/package.json
 COPY ghost/core/package.json ghost/core/package.json
 COPY ghost/i18n/package.json ghost/i18n/package.json
 COPY ghost/parse-email-address/package.json ghost/parse-email-address/package.json

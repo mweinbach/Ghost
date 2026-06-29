@@ -1,8 +1,5 @@
 import {type RouteObject, Outlet, lazyComponent, redirect} from "@tryghost/admin-x-framework";
 
-// ActivityPub
-import { FeatureFlagsProvider, routes as activityPubRoutes } from "@tryghost/activitypub/api";
-
 // Posts (aka tags and post analytics)
 import { PostsAppContextProvider, routes as postRoutes } from "@tryghost/posts/api";
 
@@ -13,7 +10,6 @@ import MyProfileRedirect from "./my-profile-redirect";
 // Ember
 import { EmberFallback, ForceUpgradeGuard } from "./ember-bridge";
 import type { RouteHandle } from "./ember-bridge";
-import { MembersRoute } from "./members-route";
 import { OnboardingRedirect } from "./onboarding/onboarding-redirect";
 
 import { NotFound } from "./not-found";
@@ -35,14 +31,10 @@ const EMBER_ROUTES: string[] = [
     "/posts/analytics/:postId/mentions",
     "/posts/analytics/:postId/debug",
     "/restore",
-    "/pages",
     "/editor/*",
     "/tags/new",
     "/explore/*",
     "/migrate/*",
-    "/members/new",
-    "/members/:member_id",
-    "/members-activity",
     "/designsandbox",
     "/mentions",
 ];
@@ -55,21 +47,28 @@ const emberFallbackRoutes: RouteObject[] = EMBER_ROUTES.map(path => ({
     handle: emberFallbackHandle,
 }));
 
-const membersRoute: RouteObject = {
-    path: "/members",
-    element: <MembersRoute />,
-    handle: emberFallbackHandle,
-    children: [
-        {
-            index: true,
-            lazy: lazyComponent(() => import("@tryghost/posts/members"))
-        },
-        {
-            path: "import",
-            lazy: lazyComponent(() => import("@tryghost/posts/members"))
-        }
-    ]
-};
+export const BLOCKED_ADMIN_ROUTE_PATHS = [
+    "/network",
+    "/network/*",
+    "/activitypub",
+    "/activitypub/*",
+    "/pages",
+    "/pages/*",
+    "/comments",
+    "/comments/*",
+    "/help",
+    "/help/*",
+    "/members",
+    "/members/*",
+    "/members-activity",
+] as const;
+
+const blockedAdminRoutes: RouteObject[] = BLOCKED_ADMIN_ROUTE_PATHS.map(path => ({
+    path,
+    loader: () => redirect("/site"),
+}));
+
+const BLOCKED_POST_APP_ROUTE_PATHS = new Set(["*", "comments"]);
 
 export const routes: RouteObject[] = [
     {
@@ -87,15 +86,14 @@ export const routes: RouteObject[] = [
                 Component: EmberFallback,
                 handle: emberFallbackHandle,
             },
-            membersRoute,
             {
                 element: (
                     <PostsAppContextProvider value={{ fromAnalytics: true }}>
                         <Outlet />
                     </PostsAppContextProvider>
                 ),
-                // Filter out catch-all routes
-                children: postRoutes[0].children!.filter((route) => route.path !== "*"),
+                // Filter out catch-all and disabled routes
+                children: postRoutes[0].children!.filter((route) => !BLOCKED_POST_APP_ROUTE_PATHS.has(route.path ?? "")),
             },
             {
                 element: (
@@ -112,28 +110,16 @@ export const routes: RouteObject[] = [
                 lazy: lazyComponent(() => import("./onboarding/onboarding-route")),
             },
             {
-                path: `network`,
-                loader: () => redirect("/activitypub"),
-            },
-            {
                 path: "my-profile",
                 Component: MyProfileRedirect,
                 handle: { allowInForceUpgrade: true } satisfies RouteHandle,
-            },
-            {
-                path: "",
-                element: (
-                    <FeatureFlagsProvider>
-                        <Outlet />
-                    </FeatureFlagsProvider>
-                ),
-                children: activityPubRoutes,
             },
             {
                 path: `settings/*`,
                 lazy: lazyComponent(() => import("./settings/settings")),
                 handle: { allowInForceUpgrade: true } satisfies RouteHandle,
             },
+            ...blockedAdminRoutes,
             // Ember-handled routes
             ...emberFallbackRoutes,
             {

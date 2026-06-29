@@ -28,6 +28,16 @@
         "allowWebhookInternalIPs": false,
         "staffDeviceVerification": true
     },
+    "staffAuth": {
+        "oauth": {
+            "enabled": false,
+            "providerName": "Single sign-on",
+            "issuer": null,
+            "clientId": null,
+            "clientSecret": null,
+            "scope": "openid email profile"
+        }
+    },
     "useMinFiles": true,
     "paths": {
         "contentPath": "content/",

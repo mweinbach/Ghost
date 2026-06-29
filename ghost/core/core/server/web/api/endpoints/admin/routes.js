@@ -296,6 +296,8 @@ module.exports = function apiRoutes() {
         shared.middleware.brute.userLogin,
         http(api.session.add)
     );
+    router.get('/session/oauth/start', shared.middleware.brute.globalBlock, http(api.session.startOAuth));
+    router.get('/session/oauth/callback', http(api.session.completeOAuth));
     router.delete('/session', mw.authAdminApi, http(api.session.delete));
     router.post('/session/verify', shared.middleware.brute.sendVerificationCode, http(api.session.sendVerification));
     router.put('/session/verify', shared.middleware.brute.userVerification, http(api.session.verify));

@@ -6,7 +6,7 @@
     # Compact log format for development
     log {
         output stdout
-        format transform "{common_log}"
+        format console
     }
 
     # Ember live reload (runs on separate port 4201)

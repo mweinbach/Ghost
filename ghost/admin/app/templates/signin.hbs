@@ -17,6 +17,16 @@
                         <div class="gh-site-icon" style={{site-icon-style}}></div>
                         <h1>{{this.config.blogTitle}}</h1>
                     </header>
+                    {{#if this.isStaffOAuthEnabled}}
+                        <a
+                            class="gh-btn gh-btn-oauth gh-btn-block gh-btn-icon"
+                            href={{this.staffOAuthStartUrl}}
+                            data-test-button="oauth-sign-in"
+                        >
+                            <span>Continue with {{this.staffOAuthProviderName}}</span>
+                        </a>
+                        <div class="gh-signin-separator"><span>or</span></div>
+                    {{/if}}
                     <GhFormGroup @errors={{this.signin.errors}} @hasValidated={{this.hasValidated}} @property="identification">
                         <label for="identification">Email address</label>
                         <span class="gh-input-icon gh-icon-mail">
@@ -75,7 +85,7 @@
                         data-test-button="sign-in" />
                 </form>
 
-                <p class="{{if this.flowErrors "main-error" "main-notification"}}" data-test-flow-notification>{{if this.flowErrors this.flowErrors this.flowNotification}}&nbsp;</p>
+                <p class="{{if this.displayFlowError "main-error" "main-notification"}}" data-test-flow-notification>{{this.flowMessage}}&nbsp;</p>
             {{/if}}
         </section>
     </div>

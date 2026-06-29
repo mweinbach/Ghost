@@ -1,10 +1,12 @@
 const adapterManager = require('../../adapter-manager');
 const createSessionService = require('./session-service');
+const createStaffOAuthService = require('./oauth-service');
 const sessionFromToken = require('./session-from-token');
 const createSessionMiddleware = require('./middleware');
 const settingsCache = require('../../../../shared/settings-cache');
 const {GhostMailer} = require('../../mail');
 const {t} = require('../../i18n');
+const logging = require('@tryghost/logging');
 
 const expressSession = require('./express-session');
 
@@ -69,6 +71,14 @@ const sessionService = createSessionService({
     t
 });
 
+const staffOAuthService = createStaffOAuthService({
+    config,
+    getSession: expressSession.getSession,
+    knex: models.Base.knex,
+    models,
+    urlUtils
+});
+
 module.exports = createSessionMiddleware({sessionService});
 
 // Looks funky but this is a "custom" piece of middleware
@@ -92,6 +102,40 @@ module.exports.initSession = async function initSession(req, res, next) {
     }
 };
 
+module.exports.startOAuth = async function startOAuth(req, res) {
+    try {
+        const authorizationUrl = await staffOAuthService.start(req, res);
+        res.redirect(302, authorizationUrl);
+    } catch (err) {
+        logging.warn(err);
+        res.redirect(302, staffOAuthService.getSigninErrorUrl());
+    }
+};
+
+module.exports.completeOAuth = async function completeOAuth(req, res) {
+    try {
+        const {
+            session,
+            user,
+            returnTo
+        } = await staffOAuthService.callback(req, res);
+
+        await sessionService.assignVerifiedUserToSession({
+            session,
+            user,
+            origin: staffOAuthService.getAdminOrigin(),
+            userAgent: req.get('user-agent'),
+            ip: req.ip
+        });
+
+        res.redirect(302, staffOAuthService.getSuccessUrl(returnTo));
+    } catch (err) {
+        logging.warn(err);
+        res.redirect(302, staffOAuthService.getSigninErrorUrl());
+    }
+};
+
 module.exports.getOriginOfRequest = getOriginOfRequest;
 module.exports.sessionService = sessionService;
+module.exports.staffOAuthService = staffOAuthService;
 module.exports.deleteAllSessions = expressSession.deleteAllSessions;

@@ -22,6 +22,7 @@ describe('Acceptance: Signin', function () {
 
     afterEach(function () {
         cleanupMockAnalyticsApps();
+        window.sessionStorage.removeItem('ghost-signin-redirect');
     });
 
     async function setupSigninFlow(server, {role = 'Administrator', fillForm = true} = {}) {
@@ -147,6 +148,36 @@ describe('Acceptance: Signin', function () {
             expect(currentURL(), 'currentURL').to.equal('/analytics');
             
             cleanupMockAnalyticsApps();
+        });
+    });
+
+    describe('staff OAuth sign-in', function () {
+        it('hides the OAuth button when staff OAuth is disabled', async function () {
+            await invalidateSession();
+            await visit('/signin');
+
+            expect(findAll('[data-test-button="oauth-sign-in"]').length).to.equal(0);
+        });
+
+        it('shows the configured OAuth button and start URL when enabled', async function () {
+            this.server.loadFixtures('sites');
+            this.server.db.sites.update(1, {
+                staffAuth: {
+                    oauth: {
+                        enabled: true,
+                        providerName: 'Example IDP'
+                    }
+                }
+            });
+            window.sessionStorage.setItem('ghost-signin-redirect', '/analytics');
+
+            await invalidateSession();
+            await visit('/signin');
+
+            const oauthButton = find('[data-test-button="oauth-sign-in"]');
+
+            expect(oauthButton.textContent.trim()).to.equal('Continue with Example IDP');
+            expect(oauthButton.getAttribute('href')).to.equal('/ghost/api/admin/session/oauth/start/?returnTo=%2Fanalytics');
         });
     });
 

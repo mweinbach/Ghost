@@ -40,6 +40,41 @@ export default class SigninController extends Controller.extend(ValidationEngine
         return this.model;
     }
 
+    get staffOAuthConfig() {
+        return this.config.staffAuth?.oauth;
+    }
+
+    get isStaffOAuthEnabled() {
+        return this.staffOAuthConfig?.enabled === true;
+    }
+
+    get staffOAuthProviderName() {
+        return this.staffOAuthConfig?.providerName || 'Single sign-on';
+    }
+
+    get staffOAuthStartUrl() {
+        let startUrl = new URL(this.ghostPaths.url.api('session', 'oauth', 'start'), window.location.origin);
+        let returnTo = window.sessionStorage.getItem('ghost-signin-redirect') || '/';
+
+        startUrl.searchParams.set('returnTo', returnTo);
+
+        return `${startUrl.pathname}${startUrl.search}`;
+    }
+
+    get hasStaffOAuthError() {
+        let [, queryString = ''] = window.location.hash.split('?');
+
+        return new URLSearchParams(queryString).get('oauthError') === 'access-denied';
+    }
+
+    get displayFlowError() {
+        return this.flowErrors || (this.hasStaffOAuthError ? 'Access denied. Please contact your site administrator.' : '');
+    }
+
+    get flowMessage() {
+        return this.displayFlowError || this.flowNotification;
+    }
+
     @action
     handleInput(event) {
         this.signin[event.target.name] = event.target.value;

@@ -1,7 +1,5 @@
 FROM caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
 
-RUN caddy add-package github.com/caddyserver/transform-encoder
-
 # Default proxy targets (can be overridden via environment variables)
 ENV GHOST_BACKEND=ghost-dev:2368 \
     ADMIN_DEV_SERVER=host.docker.internal:5174 \

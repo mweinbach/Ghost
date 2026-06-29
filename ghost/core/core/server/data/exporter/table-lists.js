@@ -58,6 +58,7 @@ const BACKUP_TABLES = [
     'recommendation_click_events',
     'recommendation_subscribe_events',
     'outbox',
+    'oauth_identities',
     'gifts',
     'gift_links',
     'post_gift_links',

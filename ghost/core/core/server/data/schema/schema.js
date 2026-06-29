@@ -200,6 +200,19 @@ module.exports = {
         created_at: {type: 'dateTime', nullable: false},
         updated_at: {type: 'dateTime', nullable: true}
     },
+    oauth_identities: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        provider: {type: 'string', maxlength: 191, nullable: false},
+        subject: {type: 'string', maxlength: 191, nullable: false},
+        user_id: {type: 'string', maxlength: 24, nullable: false, references: 'users.id', cascadeDelete: true},
+        email: {type: 'string', maxlength: 191, nullable: false, validations: {isEmail: true}},
+        created_at: {type: 'dateTime', nullable: false},
+        updated_at: {type: 'dateTime', nullable: true},
+        '@@UNIQUE_CONSTRAINTS@@': [
+            ['provider', 'subject'],
+            ['provider', 'user_id']
+        ]
+    },
     posts_authors: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
         post_id: {type: 'string', maxlength: 24, nullable: false, references: 'posts.id'},

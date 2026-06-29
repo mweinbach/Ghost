@@ -53,6 +53,54 @@
     margin: 0;
 }
 
+.gh-signin .gh-btn-oauth {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 52px;
+    border: 1px solid var(--lightgrey);
+    border-radius: 8px;
+    background: #fff;
+    line-height: 50px;
+    max-width: unset;
+    font-weight: 400;
+    transition: all 0.2s ease;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.gh-signin .gh-btn-oauth:hover {
+    border-color: var(--midgrey);
+    background: var(--whitegrey);
+}
+
+.gh-signin .gh-btn-oauth span {
+    overflow: hidden;
+    color: var(--black);
+    font-size: 1.7rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gh-signin-separator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    color: var(--midgrey);
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.gh-signin-separator::before,
+.gh-signin-separator::after {
+    content: "";
+    flex: 1 1 auto;
+    height: 1px;
+    background: var(--whitegrey);
+}
+
 .gh-signin .gh-btn-login,
 .gh-signin .gh-btn-reset,
 .gh-setup .gh-btn-signup,
