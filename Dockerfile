@@ -50,6 +50,21 @@ WORKDIR /src
 # so admin + assets are always built fresh rather than trusting host artifacts.
 COPY . .
 
+# The casper/source themes are git submodules. Railway's Dockerfile build does
+# not init submodules, so the checked-out dirs can be empty. Ghost needs a
+# default theme to boot and the archive packs content/themes, so vendor the
+# pinned theme versions when missing (no-op when the submodules are present).
+RUN if [ ! -f ghost/core/content/themes/casper/package.json ]; then \
+        rm -rf ghost/core/content/themes/casper && \
+        git clone --depth 1 --branch v5.12.1 https://github.com/TryGhost/Casper.git ghost/core/content/themes/casper && \
+        rm -rf ghost/core/content/themes/casper/.git; \
+    fi && \
+    if [ ! -f ghost/core/content/themes/source/package.json ]; then \
+        rm -rf ghost/core/content/themes/source && \
+        git clone --depth 1 --branch v1.7.1 https://github.com/TryGhost/Source.git ghost/core/content/themes/source && \
+        rm -rf ghost/core/content/themes/source/.git; \
+    fi
+
 # Install with the committed lockfile, mirroring CI. Force the hoisted (npm-like
 # flat) node_modules layout so build-time deps that the admin's postcss/vite
 # configs require transitively (e.g. postcss-import) resolve from any workspace
