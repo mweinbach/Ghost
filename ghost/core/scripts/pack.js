@@ -144,13 +144,18 @@ function assertNoWorkspaceSpecs(pkg) {
 console.log('Packing Ghost core with Bun...');
 fs.rmSync(DEPLOY_DIR, {recursive: true, force: true});
 fs.rmSync(DEPLOY_TARBALL, {force: true});
-execFileSync(
+// `bun pm pack --filename` is a no-op in bun 1.3.14 (it prints the target name
+// but writes no file), so let bun name the tarball and capture the path it
+// prints — the same pattern used for the component packs below.
+const mainPackOutput = execFileSync(
     'bun',
-    ['pm', 'pack', '--filename', path.basename(DEPLOY_TARBALL), '--ignore-scripts', '--quiet'],
-    {cwd: CORE_DIR, stdio: 'inherit'}
-);
-execFileSync('tar', ['xzf', DEPLOY_TARBALL], {cwd: CORE_DIR, stdio: 'inherit'});
-fs.rmSync(DEPLOY_TARBALL, {force: true});
+    ['pm', 'pack', '--ignore-scripts', '--quiet'],
+    {cwd: CORE_DIR, encoding: 'utf8'}
+).trim();
+const mainTarball = mainPackOutput.split('\n').map(line => line.trim()).filter(Boolean).pop();
+const mainTarballPath = path.join(CORE_DIR, mainTarball);
+execFileSync('tar', ['xzf', mainTarballPath], {cwd: CORE_DIR, stdio: 'inherit'});
+fs.rmSync(mainTarballPath, {force: true});
 
 console.log('\nPost-processing package.json...');
 const pkgPath = path.join(DEPLOY_DIR, 'package.json');
