@@ -59,13 +59,21 @@ RUN if [ ! -f ghost/core/content/themes/casper/package.json ]; then \
 RUN NODE_ENV=development bun install --frozen-lockfile --linker=hoisted && \
     bun run build:production
 
-# build:tsc emits CommonJS .js alongside the .ts sources (tsconfig module:commonjs,
-# emit on). Bun otherwise prefers the .ts, and the fork's hybrid .ts files
-# (export class + module.exports) crash as ESM ("module is not defined"). Drop
-# each .ts that has a compiled .js sibling so bun loads the CJS .js; .ts files
-# with no .js (e.g. DB migrations run natively by bun) are left untouched.
-RUN find ghost/core/core -name '*.ts' ! -name '*.d.ts' \
-        -exec sh -c 'test -f "${0%.ts}.js" && rm -f "$0"' {} \;
+# The fork's URL-service .ts files mix `export` (ESM) with `module.exports` (CJS).
+# Bun runs them as ESM from source and crashes at boot ("module is not defined");
+# they are designed to be tsc-compiled to CommonJS. build:tsc does not emit them
+# on a clean build (the Nx target declares no outputs, so a remote-cache hit skips
+# the actual emit). Compile just that directory to CommonJS .js (into a temp dir
+# so no unrelated files are emitted), swap the .js in, and drop the .ts.
+RUN cd ghost/core/core/server/services/url && \
+    (bunx --bun tsc *.ts --outDir /tmp/urljs --rootDir . --module commonjs \
+        --target es2022 --moduleResolution node --esModuleInterop \
+        --skipLibCheck --resolveJsonModule || true) && \
+    for f in *.ts; do b="${f%.ts}"; \
+        if [ -f "/tmp/urljs/$b.js" ]; then mv "/tmp/urljs/$b.js" "$b.js" && rm -f "$f"; fi; \
+    done && \
+    rm -rf /tmp/urljs && \
+    echo "url-service .ts compiled to CJS .js:" && ls *.js
 
 # Runtime: Ghost boots from ghost/core (its index.js), resolving workspace and
 # hoisted deps from the monorepo node_modules.
