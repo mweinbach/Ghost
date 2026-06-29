@@ -68,7 +68,7 @@ ENV BUN_INSTALL=/usr/local/bun
 ENV PATH="${BUN_INSTALL}/bin:${PATH}"
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libjemalloc2 fontconfig curl ca-certificates && \
+    apt-get install -y --no-install-recommends libjemalloc2 fontconfig curl ca-certificates unzip && \
     curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}" && \
     rm -rf /var/lib/apt/lists/* && \
     groupmod -g 1001 node && \
