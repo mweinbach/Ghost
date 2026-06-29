@@ -59,6 +59,14 @@ RUN if [ ! -f ghost/core/content/themes/casper/package.json ]; then \
 RUN NODE_ENV=development bun install --frozen-lockfile --linker=hoisted && \
     bun run build:production
 
+# build:tsc emits CommonJS .js alongside the .ts sources (tsconfig module:commonjs,
+# emit on). Bun otherwise prefers the .ts, and the fork's hybrid .ts files
+# (export class + module.exports) crash as ESM ("module is not defined"). Drop
+# each .ts that has a compiled .js sibling so bun loads the CJS .js; .ts files
+# with no .js (e.g. DB migrations run natively by bun) are left untouched.
+RUN find ghost/core/core -name '*.ts' ! -name '*.d.ts' \
+        -exec sh -c 'test -f "${0%.ts}.js" && rm -f "$0"' {} \;
+
 # Runtime: Ghost boots from ghost/core (its index.js), resolving workspace and
 # hoisted deps from the monorepo node_modules.
 ENV NODE_ENV=production
