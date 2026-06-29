@@ -15,6 +15,10 @@ module.exports = {
         return require('./max-limit-cap');
     },
 
+    get headlessRedirect() {
+        return require('./headless-redirect');
+    },
+
     get prettyUrls() {
         return require('./pretty-urls');
     },

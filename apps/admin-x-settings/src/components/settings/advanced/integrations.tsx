@@ -153,6 +153,14 @@ const BuiltInIntegrations: React.FC = () => {
             title: 'Transistor.fm'
         },
         {
+            active: config.headless?.enabled === true,
+            detail: 'Connect a custom site or app',
+            icon: <Icon name='brackets' size={32} />,
+            modal: 'integrations/custom-frontend',
+            testId: 'custom-frontend-integration',
+            title: 'Custom frontend'
+        },
+        {
             detail: 'Access your content programmatically',
             icon: <Icon name='angle-brackets' size={32} />,
             modal: 'integrations/contentapi',

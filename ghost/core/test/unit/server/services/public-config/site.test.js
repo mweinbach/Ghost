@@ -45,6 +45,26 @@ describe('Public-config Service', function () {
                 assert.equal(siteProperties.sentry_env, 'testing'); // testing is the default env
             });
 
+            it('should include public headless properties', function () {
+                configUtils.set({
+                    url: 'http://localhost:3000',
+                    admin: {
+                        url: 'http://localhost:2368/ghost/'
+                    },
+                    headless: {
+                        enabled: true
+                    }
+                });
+
+                const siteProperties = getSiteProperties();
+
+                assert.deepEqual(siteProperties.headless, {
+                    enabled: true,
+                    frontendUrl: 'http://localhost:3000/',
+                    contentApiUrl: 'http://localhost:2368/ghost/api/content/'
+                });
+            });
+
             it('should use PRO_ENV env var for sentry_env property if in config', function () {
                 const env = 'staging';
 

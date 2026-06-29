@@ -1,6 +1,7 @@
 const debug = require('@tryghost/debug')('web:backend');
 const express = require('../../../shared/express');
 const {BASE_API_PATH} = require('../../../shared/url-utils');
+const shared = require('../shared');
 
 /**
  *
@@ -16,6 +17,7 @@ module.exports = () => {
     backendApp.lazyUse('/ghost/.well-known', require('../well-known'));
 
     backendApp.use('/ghost', require('../../services/auth/session').createSessionFromToken(), require('../admin')());
+    backendApp.use(shared.middleware.headlessRedirect);
 
     return backendApp;
 };

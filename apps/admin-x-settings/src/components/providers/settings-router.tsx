@@ -23,6 +23,7 @@ export const modalPaths: {[key: string]: ModalName} = {
     'history/view': 'HistoryModal',
     'history/view/:user': 'HistoryModal',
     'integrations/contentapi': 'ContentApiModal',
+    'integrations/custom-frontend': 'CustomFrontendModal',
     'integrations/zapier': 'ZapierModal',
     'integrations/transistor': 'TransistorModal',
     'integrations/slack': 'SlackModal',

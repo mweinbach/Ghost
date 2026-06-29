@@ -237,12 +237,13 @@ async function initExpressApps({frontend, backend, config}) {
 
     const parentApp = require('./server/web/parent/app')();
     const vhost = require('@tryghost/mw-vhost');
+    const mw = require('./server/web/parent/middleware');
 
     // Mount the express apps on the parentApp
     if (backend) {
         // ADMIN + API
         const backendApp = require('./server/web/parent/backend')();
-        parentApp.use(vhost(config.getBackendMountPath(), backendApp));
+        parentApp.use(vhost(config.getBackendMountPath(), mw.hostGate.backend(backendApp)));
     }
 
     if (frontend) {
@@ -252,7 +253,7 @@ async function initExpressApps({frontend, backend, config}) {
         // (which only exposes the legacy id-based methods).
         const urlService = require('./server/services/url').facade;
         const frontendApp = require('./server/web/parent/frontend')({urlService});
-        parentApp.use(vhost(config.getFrontendMountPath(), frontendApp));
+        parentApp.use(vhost(config.getFrontendMountPath(), mw.hostGate.frontend(frontendApp)));
     }
 
     debug('End: initExpressApps');

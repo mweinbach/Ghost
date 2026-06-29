@@ -46,6 +46,21 @@ const getTinybirdStatsPayload = (statsConfig, siteUuid) => {
     return statsPayload;
 };
 
+function getHeadlessConfig() {
+    const adminUrl = new URL(config.getAdminUrl() || config.getSiteUrl());
+    const adminPathname = adminUrl.pathname.replace(/\/$/, '').endsWith('/ghost')
+        ? `${adminUrl.pathname.replace(/\/$/, '')}/`
+        : `${adminUrl.pathname.replace(/\/$/, '')}/ghost/`;
+    const adminBaseUrl = new URL(adminPathname, adminUrl.origin);
+
+    return {
+        enabled: config.get('headless:enabled') === true,
+        frontendUrl: config.get('url'),
+        contentApiUrl: new URL('api/content/', adminBaseUrl).href,
+        previewUrlTemplate: config.get('headless:previewUrlTemplate') || null
+    };
+}
+
 module.exports = function getConfigProperties() {
     const mailProviders = providerStatus.getProviderStatus({config, settings: settingsCache});
     const configProperties = {
@@ -67,7 +82,8 @@ module.exports = function getConfigProperties() {
         klipy: config.get('klipy'),
         pintura: config.get('pintura'),
         signupForm: config.get('signupForm'),
-        security: config.get('security')
+        security: config.get('security'),
+        headless: getHeadlessConfig()
     };
 
     if (config.get('explore') && config.get('explore:testimonials_url')) {

@@ -1,11 +1,10 @@
 import React from "react"
 
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Indicator, SidebarMenuButton} from "@tryghost/shade/components"
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, SidebarMenuButton} from "@tryghost/shade/components"
 import {LucideIcon} from "@tryghost/shade/utils"
 import { useCurrentUser } from "@tryghost/admin-x-framework/api/current-user";
 import { getGhostPaths } from "@tryghost/admin-x-framework/helpers";
 import { useTheme, type ThemeMode } from "@/hooks/use-theme";
-import { useWhatsNew } from "@/whats-new/hooks/use-whats-new";
 import { useUpgradeStatus } from "./hooks/use-upgrade-status";
 import { useBrowseSite } from "@tryghost/admin-x-framework/api/site";
 import { UserMenuItem } from "./user-menu-item";
@@ -100,12 +99,8 @@ function UserMenuSignOut() {
     );
 }
 
-interface UserMenuProps extends React.ComponentProps<typeof DropdownMenu> {
-    onOpenWhatsNew?: () => void;
-}
-function UserMenu(props: UserMenuProps) {
+function UserMenu(props: React.ComponentProps<typeof DropdownMenu>) {
     const currentUser = useCurrentUser();
-    const { data: whatsNewData } = useWhatsNew();
     const { showUpgradeBanner } = useUpgradeStatus();
 
     return (
@@ -118,16 +113,6 @@ function UserMenu(props: UserMenuProps) {
                 >
                     <div className="relative">
                         <UserMenuAvatar />
-                        {whatsNewData?.hasNew && (
-                            <span className="absolute -top-0.5 -right-0.5">
-                                <Indicator
-                                    variant="success"
-                                    size="sm"
-                                    label="New updates available"
-                                    data-test-whats-new-avatar-badge
-                                />
-                            </span>
-                        )}
                     </div>
                     <div className="grid flex-1 text-left text-base leading-tight">
                         <span className="truncate font-semibold">{currentUser.data?.name}</span>
@@ -150,38 +135,8 @@ function UserMenu(props: UserMenuProps) {
                     <UserMenuAvatar />
                 </UserMenuHeader>
                 <DropdownMenuSeparator />
-                <UserMenuItem
-                    data-test-nav="whatsnew"
-                    asChild={false}
-                    onSelect={() => {
-                        props.onOpenWhatsNew?.();
-                    }}
-                >
-                    <LucideIcon.Sparkles />
-                    <UserMenuItem.Label>What’s new?</UserMenuItem.Label>
-                    {whatsNewData?.hasNew && (
-                        <div className="flex flex-1 justify-end">
-                            <Indicator
-                                variant="success"
-                                size="sm"
-                                label="New updates available"
-                                data-test-whats-new-menu-badge
-                                />
-                        </div>
-                    )}
-                </UserMenuItem>
                 <UserMenuProfile />
                 <DropdownMenuSeparator />
-                <UserMenuItem>
-                    <a
-                        href="https://ghost.org/resources?utm_source=admin&utm_campaign=resources"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <LucideIcon.Book />
-                        <UserMenuItem.Label>Resources & guides</UserMenuItem.Label>
-                    </a>
-                </UserMenuItem>
                 <UserMenuAppearance />
                 <DropdownMenuSeparator />
                 <UserMenuSignOut />
@@ -202,8 +157,6 @@ function UserMenu(props: UserMenuProps) {
  * - Sign out
  *
  * Contributors do not have access to:
- * - What's new
- * - Help center / Resources & guides
  * - Settings navigation
  */
 function ContributorUserMenu() {

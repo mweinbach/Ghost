@@ -19,13 +19,16 @@ const allowedKeys = [
     'enableDeveloperExperiments',
     'stripeDirect',
     'mailgunIsConfigured',
+    'mailProviderConfigured',
+    'mailProviders',
     'emailAnalytics',
     'hostSettings',
     'tenor',
     'klipy',
     'pintura',
     'signupForm',
-    'security'
+    'security',
+    'headless'
 ];
 
 describe('Public-config Service', function () {
@@ -44,6 +47,28 @@ describe('Public-config Service', function () {
             const configProperties = getConfigProperties();
 
             assert.deepEqual(Object.keys(configProperties), allowedKeys);
+        });
+
+        it('should return public headless config', function () {
+            configUtils.set({
+                url: 'http://localhost:3000',
+                admin: {
+                    url: 'http://localhost:2368/ghost/'
+                },
+                headless: {
+                    enabled: true,
+                    previewUrlTemplate: 'http://localhost:3000/preview/{uuid}/'
+                }
+            });
+
+            const configProperties = getConfigProperties();
+
+            assert.deepEqual(configProperties.headless, {
+                enabled: true,
+                frontendUrl: 'http://localhost:3000',
+                contentApiUrl: 'http://localhost:2368/ghost/api/content/',
+                previewUrlTemplate: 'http://localhost:3000/preview/{uuid}/'
+            });
         });
 
         it('should return GHOST_BUILD_VERSION as version when set', function () {

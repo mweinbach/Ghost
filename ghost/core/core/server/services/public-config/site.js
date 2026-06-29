@@ -4,6 +4,20 @@ const config = require('../../../shared/config');
 const urlUtils = require('../../../shared/url-utils');
 const {getPublicConfig: getPublicOAuthConfig} = require('../auth/session/oauth-config');
 
+function getHeadlessConfig() {
+    const adminUrl = new URL(config.getAdminUrl() || config.getSiteUrl());
+    const adminPathname = adminUrl.pathname.replace(/\/$/, '').endsWith('/ghost')
+        ? `${adminUrl.pathname.replace(/\/$/, '')}/`
+        : `${adminUrl.pathname.replace(/\/$/, '')}/ghost/`;
+    const adminBaseUrl = new URL(adminPathname, adminUrl.origin);
+
+    return {
+        enabled: config.get('headless:enabled') === true,
+        frontendUrl: urlUtils.urlFor('home', true),
+        contentApiUrl: new URL('api/content/', adminBaseUrl).href
+    };
+}
+
 module.exports = function getSiteProperties() {
     const siteProperties = {
         title: settingsCache.get('title'),
@@ -17,6 +31,7 @@ module.exports = function getSiteProperties() {
         version: ghostVersion.safe,
         allow_external_signup: settingsCache.get('allow_self_signup') && !(settingsCache.get('portal_signup_checkbox_required') && settingsCache.get('portal_signup_terms_html')),
         site_uuid: settingsCache.get('site_uuid'),
+        headless: getHeadlessConfig(),
         staffAuth: {
             oauth: getPublicOAuthConfig(config)
         }

@@ -7,6 +7,11 @@
         "accent_color": "#FF1A75",
         "locale": "en",
         "url": "http://test.com/",
-        "version": "x.x"
+        "version": "x.x",
+        "headless": {
+            "enabled": false,
+            "frontendUrl": "http://test.com/",
+            "contentApiUrl": "http://test.com/ghost/api/content/"
+        }
     }
 }

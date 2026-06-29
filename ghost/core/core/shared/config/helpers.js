@@ -7,15 +7,30 @@ function escapeRegExp(string) {
 
 const DEFAULT_HOST_ARG = /.*/;
 
-const getHostInfo = (config) => {
-    const frontendHost = new URL(config.getSiteUrl()).hostname;
+const getUrlHost = (configuredUrl) => {
+    const parsedUrl = new URL(configuredUrl);
+    return parsedUrl.host;
+};
 
-    const backendHost = config.getAdminUrl() ? (new URL(config.getAdminUrl()).hostname) : '';
+const getUrlHostname = (configuredUrl) => {
+    const parsedUrl = new URL(configuredUrl);
+    return parsedUrl.hostname;
+};
+
+const getHostInfo = (config) => {
+    const frontendHost = getUrlHost(config.getSiteUrl());
+    const frontendHostname = getUrlHostname(config.getSiteUrl());
+
+    const backendHost = config.getAdminUrl() ? getUrlHost(config.getAdminUrl()) : '';
+    const backendHostname = config.getAdminUrl() ? getUrlHostname(config.getAdminUrl()) : '';
     const hasSeparateBackendHost = backendHost && backendHost !== frontendHost;
+    const hasSeparateBackendHostname = backendHostname && backendHostname !== frontendHostname;
 
     return {
         backendHost,
-        hasSeparateBackendHost
+        backendHostname,
+        hasSeparateBackendHost,
+        hasSeparateBackendHostname
     };
 };
 
@@ -23,11 +38,11 @@ const getHostInfo = (config) => {
  *
  * @returns {string|RegExp}
  */
-const getBackendMountPath = function getFrontendMountPath() {
-    const {backendHost, hasSeparateBackendHost} = getHostInfo(this);
+const getBackendMountPath = function getBackendMountPath() {
+    const {backendHostname, hasSeparateBackendHost} = getHostInfo(this);
 
-    // with a separate admin url only serve on that host, otherwise serve on all hosts
-    return (hasSeparateBackendHost) && backendHost ? backendHost : DEFAULT_HOST_ARG;
+    // mw-vhost matches against hostname only. Full host+port filtering happens in the parent host gate.
+    return (hasSeparateBackendHost) && backendHostname ? backendHostname : DEFAULT_HOST_ARG;
 };
 
 /**
@@ -35,10 +50,11 @@ const getBackendMountPath = function getFrontendMountPath() {
  * @returns {string|RegExp}
  */
 const getFrontendMountPath = function getFrontendMountPath() {
-    const {backendHost, hasSeparateBackendHost} = getHostInfo(this);
+    const {backendHostname, hasSeparateBackendHostname} = getHostInfo(this);
 
-    // with a separate admin url we adjust the frontend vhost to exclude requests to that host, otherwise serve on all hosts
-    return (hasSeparateBackendHost && backendHost) ? new RegExp(`^(?!${escapeRegExp(backendHost)}).*`) : DEFAULT_HOST_ARG;
+    // with a separate admin hostname we adjust the frontend vhost to exclude requests to that hostname.
+    // If only the port differs, both apps must mount on the hostname and the parent host gate splits them by full Host.
+    return (hasSeparateBackendHostname && backendHostname) ? new RegExp(`^(?!${escapeRegExp(backendHostname)}).*`) : DEFAULT_HOST_ARG;
 };
 
 /**

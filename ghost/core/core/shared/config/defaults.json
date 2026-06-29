@@ -35,8 +35,19 @@
             "issuer": null,
             "clientId": null,
             "clientSecret": null,
-            "scope": "openid email profile"
+            "scope": "openid email profile",
+            "provisioning": {
+                "enabled": false,
+                "roleClaim": "role",
+                "roleMap": {},
+                "defaultRole": null
+            }
         }
+    },
+    "headless": {
+        "enabled": false,
+        "redirectStatus": 302,
+        "previewUrlTemplate": null
     },
     "useMinFiles": true,
     "paths": {

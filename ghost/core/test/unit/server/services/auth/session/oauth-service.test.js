@@ -8,6 +8,7 @@ describe('Staff OAuth Service', function () {
     let identities;
     let session;
     let users;
+    let addedUsers;
     let client;
     let service;
     let oidcConfig;
@@ -95,6 +96,18 @@ describe('Staff OAuth Service', function () {
                     },
                     async getByEmail(email) {
                         return users.find(user => user.get('email').toLowerCase() === email.toLowerCase());
+                    },
+                    async add(data) {
+                        const user = createUser({
+                            id: 'provisioned-user',
+                            email: data.email,
+                            name: data.name,
+                            roles: data.roles,
+                            status: 'active'
+                        });
+                        addedUsers.push(data);
+                        users.push(user);
+                        return user;
                     }
                 }
             },
@@ -124,6 +137,7 @@ describe('Staff OAuth Service', function () {
     beforeEach(function () {
         identities = [];
         session = {};
+        addedUsers = [];
         users = [
             createUser({
                 id: 'user-1',
@@ -219,6 +233,171 @@ describe('Staff OAuth Service', function () {
         assert.equal(identities[0].subject, 'subject-1');
         assert.equal(identities[0].user_id, 'user-1');
         assert.equal(identities[0].email, 'owner@example.com');
+    });
+
+    it('provisions a first-time active staff user when enabled and the role claim maps to a Ghost role', async function () {
+        users = [];
+        config.get.withArgs('staffAuth:oauth').returns({
+            enabled: true,
+            providerName: 'Example IDP',
+            issuer: 'https://idp.example.com',
+            clientId: 'ghost-client',
+            clientSecret: 'ghost-secret',
+            scope: 'openid email profile',
+            provisioning: {
+                enabled: true,
+                roleClaim: 'ghost_role',
+                roleMap: {
+                    external_author: 'Author'
+                }
+            }
+        });
+        session[SESSION_KEY] = {
+            state: 'state-value',
+            nonce: 'nonce-value',
+            codeVerifier: 'code-verifier',
+            returnTo: '/posts',
+            createdAt: 1000
+        };
+        createService({
+            claims: {
+                sub: 'subject-2',
+                email: 'new-author@example.com',
+                email_verified: true,
+                name: 'New Author',
+                ghost_role: 'external_author'
+            }
+        });
+
+        const result = await service.callback(createCallbackRequest(), {});
+
+        assert.equal(result.user.id, 'provisioned-user');
+        assert.deepEqual(addedUsers[0], {
+            email: 'new-author@example.com',
+            name: 'New Author',
+            password: addedUsers[0].password,
+            roles: ['Author']
+        });
+        assert.equal(identities[0].user_id, 'provisioned-user');
+        assert.equal(identities[0].subject, 'subject-2');
+    });
+
+    it('uses the configured default role when provisioning and the role claim is missing', async function () {
+        users = [];
+        config.get.withArgs('staffAuth:oauth').returns({
+            enabled: true,
+            providerName: 'Example IDP',
+            issuer: 'https://idp.example.com',
+            clientId: 'ghost-client',
+            clientSecret: 'ghost-secret',
+            scope: 'openid email profile',
+            provisioning: {
+                enabled: true,
+                roleClaim: 'ghost_role',
+                roleMap: {},
+                defaultRole: 'Contributor'
+            }
+        });
+        session[SESSION_KEY] = {
+            state: 'state-value',
+            nonce: 'nonce-value',
+            codeVerifier: 'code-verifier',
+            returnTo: '/posts',
+            createdAt: 1000
+        };
+        createService({
+            claims: {
+                sub: 'subject-2',
+                email: 'new-contributor@example.com',
+                email_verified: true
+            }
+        });
+
+        await service.callback(createCallbackRequest(), {});
+
+        assert.deepEqual(addedUsers[0].roles, ['Contributor']);
+    });
+
+    it('rejects provisioning when the role claim is unknown', async function () {
+        users = [];
+        config.get.withArgs('staffAuth:oauth').returns({
+            enabled: true,
+            providerName: 'Example IDP',
+            issuer: 'https://idp.example.com',
+            clientId: 'ghost-client',
+            clientSecret: 'ghost-secret',
+            scope: 'openid email profile',
+            provisioning: {
+                enabled: true,
+                roleClaim: 'ghost_role',
+                roleMap: {
+                    external_author: 'Author'
+                }
+            }
+        });
+        session[SESSION_KEY] = {
+            state: 'state-value',
+            nonce: 'nonce-value',
+            codeVerifier: 'code-verifier',
+            returnTo: '/posts',
+            createdAt: 1000
+        };
+        createService({
+            claims: {
+                sub: 'subject-2',
+                email: 'new-author@example.com',
+                email_verified: true,
+                ghost_role: 'external_owner'
+            }
+        });
+
+        await assert.rejects(
+            service.callback(createCallbackRequest(), {}),
+            {message: 'Access Denied.'}
+        );
+        assert.equal(addedUsers.length, 0);
+        assert.equal(identities.length, 0);
+    });
+
+    it('rejects provisioning when the mapped role is Owner', async function () {
+        users = [];
+        config.get.withArgs('staffAuth:oauth').returns({
+            enabled: true,
+            providerName: 'Example IDP',
+            issuer: 'https://idp.example.com',
+            clientId: 'ghost-client',
+            clientSecret: 'ghost-secret',
+            scope: 'openid email profile',
+            provisioning: {
+                enabled: true,
+                roleClaim: 'ghost_role',
+                roleMap: {
+                    external_owner: 'Owner'
+                }
+            }
+        });
+        session[SESSION_KEY] = {
+            state: 'state-value',
+            nonce: 'nonce-value',
+            codeVerifier: 'code-verifier',
+            returnTo: '/posts',
+            createdAt: 1000
+        };
+        createService({
+            claims: {
+                sub: 'subject-2',
+                email: 'new-owner@example.com',
+                email_verified: true,
+                ghost_role: 'external_owner'
+            }
+        });
+
+        await assert.rejects(
+            service.callback(createCallbackRequest(), {}),
+            {message: 'Access Denied.'}
+        );
+        assert.equal(addedUsers.length, 0);
+        assert.equal(identities.length, 0);
     });
 
     it('uses verified UserInfo email claims when the ID token does not include an email', async function () {

@@ -14,6 +14,11 @@ export type SiteData = {
     locale: string;
     version: string;
     site_uuid: string;
+    headless?: {
+        enabled: boolean;
+        frontendUrl: string;
+        contentApiUrl: string;
+    };
 };
 
 export interface SiteResponseType {

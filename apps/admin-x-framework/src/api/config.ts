@@ -108,6 +108,12 @@ export type Config = {
         enabled?: boolean;
         organization?: string;
     };
+    headless?: {
+        enabled: boolean;
+        frontendUrl: string;
+        contentApiUrl: string;
+        previewUrlTemplate?: string | null;
+    };
     // Config is relatively fluid, so we only type used properties above and still support arbitrary property access when needed
     [key: string]: JSONValue | undefined;
 };

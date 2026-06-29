@@ -39,6 +39,25 @@ describe('vhost utils', function () {
         });
     });
 
+    describe('with separate admin port on the same hostname', function () {
+        beforeEach(function () {
+            configUtils.set('url', 'http://localhost:3000');
+            configUtils.set('admin:url', 'http://localhost:2368');
+        });
+
+        it('treats host and port as the mount identity', function () {
+            assert.equal(configUtils.config.getBackendMountPath(), 'localhost');
+            assert.deepEqual(configUtils.config.getFrontendMountPath(), /.*/);
+        });
+
+        it('allows both apps to mount on the same hostname for host gate filtering', function () {
+            const frontendRegex = configUtils.config.getFrontendMountPath();
+
+            assert.equal(frontendRegex.test('localhost:3000'), true);
+            assert.equal(frontendRegex.test('localhost:2368'), true);
+        });
+    });
+
     // url       = 'http://ghost.blog'
     // admin.url = 'https://ghost.blog'
     describe('with separate admin protocol', function () {

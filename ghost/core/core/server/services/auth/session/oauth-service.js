@@ -1,12 +1,14 @@
 const ObjectId = require('bson-objectid').default;
 const errors = require('@tryghost/errors');
 const logging = require('@tryghost/logging');
+const security = require('@tryghost/security');
 const {getConfig, isEnabled} = require('./oauth-config');
 
 const SESSION_KEY = 'staff_oauth';
 const STATE_TTL_MS = 10 * 60 * 1000;
 const ACCESS_DENIED_MESSAGE = 'Access Denied.';
 const ACTIVE_USER_STATUSES = new Set(['active', 'warn-1', 'warn-2', 'warn-3', 'warn-4']);
+const PROVISIONABLE_ROLES = new Set(['Administrator', 'Editor', 'Author', 'Contributor']);
 
 function accessDenied(err) {
     return new errors.NoPermissionError({
@@ -57,6 +59,7 @@ function getEmailVerified(claims, userInfo) {
 function getProfileFromClaims(claims = {}, userInfo = {}) {
     const subject = claims.sub || userInfo.sub;
     const email = claims.email || userInfo.email;
+    const name = claims.name || userInfo.name || claims.preferred_username || userInfo.preferred_username;
 
     if (!subject || typeof subject !== 'string') {
         throw accessDenied();
@@ -72,8 +75,81 @@ function getProfileFromClaims(claims = {}, userInfo = {}) {
 
     return {
         subject,
-        email: email.toLowerCase()
+        email: email.toLowerCase(),
+        name: typeof name === 'string' && name.trim() ? name.trim() : email.split('@')[0]
     };
+}
+
+function getClaimValue(source, claimName) {
+    if (!source || !claimName) {
+        return undefined;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(source, claimName)) {
+        return source[claimName];
+    }
+
+    if (!claimName.includes('.')) {
+        return undefined;
+    }
+
+    return claimName.split('.').reduce((value, key) => {
+        if (value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, key)) {
+            return value[key];
+        }
+        return undefined;
+    }, source);
+}
+
+function getProvisioningConfig(oauthConfig) {
+    return oauthConfig.provisioning || {};
+}
+
+function isProvisioningEnabled(oauthConfig) {
+    return getProvisioningConfig(oauthConfig).enabled === true;
+}
+
+function getProvisioningClaimValues(oauthConfig, claims, userInfo) {
+    const provisioningConfig = getProvisioningConfig(oauthConfig);
+    const roleClaim = provisioningConfig.roleClaim || 'role';
+    const claimValue = getClaimValue(claims, roleClaim) ?? getClaimValue(userInfo, roleClaim);
+
+    if (Array.isArray(claimValue)) {
+        return claimValue.filter(value => typeof value === 'string');
+    }
+
+    if (typeof claimValue === 'string') {
+        return [claimValue];
+    }
+
+    return [];
+}
+
+function validateProvisioningRole(roleName) {
+    if (!PROVISIONABLE_ROLES.has(roleName)) {
+        throw accessDenied();
+    }
+
+    return roleName;
+}
+
+function getProvisioningRole(oauthConfig, claims, userInfo) {
+    const provisioningConfig = getProvisioningConfig(oauthConfig);
+    const roleMap = provisioningConfig.roleMap || {};
+    const claimValues = getProvisioningClaimValues(oauthConfig, claims, userInfo);
+
+    for (const claimValue of claimValues) {
+        const mappedRole = roleMap[claimValue];
+        if (mappedRole) {
+            return validateProvisioningRole(mappedRole);
+        }
+    }
+
+    if (claimValues.length === 0 && provisioningConfig.defaultRole) {
+        return validateProvisioningRole(provisioningConfig.defaultRole);
+    }
+
+    throw accessDenied();
 }
 
 function getSearchFromRequest(req) {
@@ -193,10 +269,9 @@ module.exports = function createStaffOAuthService({
         }
     }
 
-    async function findActiveUserByEmail(email) {
+    async function findUserByEmail(email) {
         try {
-            const user = await models.User.getByEmail(email, {status: 'all'});
-            return isActiveUser(user) ? user : null;
+            return await models.User.getByEmail(email, {status: 'all'});
         } catch (err) {
             return null;
         }
@@ -238,15 +313,40 @@ module.exports = function createStaffOAuthService({
         });
     }
 
-    async function findOrCreateUserLink({provider, subject, email}) {
+    async function provisionUser({email, name, role}) {
+        return models.User.add({
+            email,
+            name,
+            password: security.identifier.uid(50),
+            roles: [role]
+        }, {
+            context: {
+                internal: true
+            }
+        });
+    }
+
+    async function findOrCreateUserLink({provider, subject, email, name, oauthConfig, claims, userInfo}) {
         const existingUser = await findUserForIdentity({provider, subject});
         if (existingUser) {
             return existingUser;
         }
 
-        const user = await findActiveUserByEmail(email);
-        if (!user) {
+        let user = await findUserByEmail(email);
+        if (user && !isActiveUser(user)) {
             throw accessDenied();
+        }
+
+        if (!user) {
+            if (!isProvisioningEnabled(oauthConfig)) {
+                throw accessDenied();
+            }
+
+            user = await provisionUser({
+                email,
+                name,
+                role: getProvisioningRole(oauthConfig, claims, userInfo)
+            });
         }
 
         try {
@@ -260,6 +360,23 @@ module.exports = function createStaffOAuthService({
 
             throw accessDenied(err);
         }
+    }
+
+    function shouldFetchUserInfo({tokens, claims, oauthConfig}) {
+        if (!tokens.access_token || !claims.sub) {
+            return false;
+        }
+
+        if (!claims.email || claims.email_verified !== true) {
+            return true;
+        }
+
+        if (!isProvisioningEnabled(oauthConfig)) {
+            return false;
+        }
+
+        const roleClaim = getProvisioningConfig(oauthConfig).roleClaim || 'role';
+        return getClaimValue(claims, roleClaim) === undefined;
     }
 
     function getStoredState(session) {
@@ -327,7 +444,7 @@ module.exports = function createStaffOAuthService({
             });
             claims = typeof tokens.claims === 'function' ? (tokens.claims() || {}) : {};
 
-            if (tokens.access_token && claims.sub && (!claims.email || claims.email_verified !== true)) {
+            if (shouldFetchUserInfo({tokens, claims, oauthConfig})) {
                 userInfo = await client.fetchUserInfo(oidcConfig, tokens.access_token, claims.sub);
             }
         } catch (err) {
@@ -338,7 +455,11 @@ module.exports = function createStaffOAuthService({
         const user = await findOrCreateUserLink({
             provider: getProvider(oauthConfig),
             subject: profile.subject,
-            email: profile.email
+            email: profile.email,
+            name: profile.name,
+            oauthConfig,
+            claims,
+            userInfo
         });
 
         if (!user) {
@@ -366,6 +487,7 @@ module.exports.ACCESS_DENIED_MESSAGE = ACCESS_DENIED_MESSAGE;
 module.exports.SESSION_KEY = SESSION_KEY;
 module.exports.STATE_TTL_MS = STATE_TTL_MS;
 module.exports._private = {
+    getProvisioningRole,
     getProfileFromClaims,
     normalizeReturnTo
 };

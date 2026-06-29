@@ -31,6 +31,12 @@
             "url": "https://signup-form.test/signup-form.min.js",
             "version": "0.2"
         },
+        "headless": {
+            "enabled": false,
+            "frontendUrl": "http://test.com/",
+            "contentApiUrl": "http://test.com/ghost/api/content/",
+            "previewUrlTemplate": null
+        },
         "security": {
             "staffDeviceVerification": true
         }
