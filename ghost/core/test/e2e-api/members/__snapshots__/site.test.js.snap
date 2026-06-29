@@ -11,6 +11,12 @@ Object {
     "locale": "en",
     "logo": null,
     "site_uuid": StringMatching /\\[a-f0-9\\]\\{8\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{12\\}/,
+    "staffAuth": Object {
+      "oauth": Object {
+        "enabled": false,
+        "providerName": "Single sign-on",
+      },
+    },
     "title": "Ghost",
     "url": "http://127.0.0.1:2369/",
     "version": StringMatching /\\\\d\\+\\\\\\.\\\\d\\+/,
@@ -42,6 +48,12 @@ Object {
     "locale": "en",
     "logo": null,
     "site_uuid": StringMatching /\\[a-f0-9\\]\\{8\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{12\\}/,
+    "staffAuth": Object {
+      "oauth": Object {
+        "enabled": false,
+        "providerName": "Single sign-on",
+      },
+    },
     "title": "Ghost",
     "url": "http://127.0.0.1:2369/",
     "version": StringMatching /\\\\d\\+\\\\\\.\\\\d\\+/,
@@ -73,6 +85,12 @@ Object {
     "locale": "en",
     "logo": null,
     "site_uuid": StringMatching /\\[a-f0-9\\]\\{8\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{4\\}-\\[a-f0-9\\]\\{12\\}/,
+    "staffAuth": Object {
+      "oauth": Object {
+        "enabled": false,
+        "providerName": "Single sign-on",
+      },
+    },
     "title": "Ghost",
     "url": "http://127.0.0.1:2369/",
     "version": StringMatching /\\\\d\\+\\\\\\.\\\\d\\+/,
