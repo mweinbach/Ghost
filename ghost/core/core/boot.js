@@ -324,6 +324,7 @@ async function initServices({ghostServer} = {}) {
     const permissions = require('./server/services/permissions');
     const indexnow = require('./server/services/indexnow');
     const slack = require('./server/services/slack');
+    const portalNotes = require('./server/services/portal-notes');
     const webhooks = require('./server/services/webhooks');
     const postScheduling = require('./server/services/post-scheduling').default;
     const comments = require('./server/services/comments');
@@ -373,6 +374,7 @@ async function initServices({ghostServer} = {}) {
         permissions.init(),
         indexnow.listen(),
         slack.listen(),
+        portalNotes.listen(),
         audienceFeedback.init(),
         emailService.init({ghostServer}),
         emailAnalytics.init(),

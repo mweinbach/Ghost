@@ -5,6 +5,7 @@ const moment = require('moment');
 const {sequence} = require('@tryghost/promise');
 const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
+const logging = require('@tryghost/logging');
 const nql = require('@tryghost/nql');
 const htmlToPlaintext = require('@tryghost/html-to-plaintext');
 const ghostBookshelf = require('./base');
@@ -625,6 +626,36 @@ Post = ghostBookshelf.Model.extend({
                 // But ensure the changed object still has it for event detection
                 this.changed = this.changed || {};
                 this.changed._touch = true;
+            }
+        }
+
+        // DiligenceStack: default new posts into the portal "Notes" feed by
+        // attaching the internal #notes tag (slug `hash-notes`) on creation.
+        // This only sets a default for brand-new posts — authors can still
+        // remove the tag afterwards (updates are left untouched). Pages are
+        // excluded, and any failure here is logged and skipped so it can never
+        // block a post from saving.
+        if (options.method === 'insert' && this.get('type') !== 'page') {
+            try {
+                const incomingTags = this.get('tags');
+                const tags = Array.isArray(incomingTags) ? incomingTags.slice() : [];
+                const alreadyNotes = tags.some((tag) => {
+                    const name = tag && tag.name;
+                    return (tag && tag.slug === 'hash-notes')
+                        || (name && String(name).toLowerCase() === '#notes');
+                });
+                if (!alreadyNotes) {
+                    const notesTag = await Tag.findOne(
+                        {slug: 'hash-notes'},
+                        {transacting: options.transacting, context: {internal: true}}
+                    );
+                    // Attach the existing tag by id (no duplicate); if it does
+                    // not exist yet, create it by name.
+                    tags.push(notesTag ? {id: notesTag.id} : {name: '#notes'});
+                    this.set('tags', tags);
+                }
+            } catch (err) {
+                logging.warn('[portal-notes] could not auto-attach #notes tag: ' + (err && err.message));
             }
         }
 
