@@ -40,7 +40,9 @@
                             {{#if this.post.isSent}}
                                 <GhUrlPreview @prefix="email" @slug={{this.uuidValue}} @tagName="p" @classNames="description" />
                             {{else}}
-                                <GhUrlPreview @slug={{this.slugValue}} @tagName="p" @classNames="description" />
+                                {{!-- Posts live under the /notes/ collection permalink (see default-routes.yaml);
+                                      pages stay at the site root. Keep this hint in sync with post.url. --}}
+                                <GhUrlPreview @prefix={{if this.post.isPost "notes"}} @slug={{this.slugValue}} @tagName="p" @classNames="description" />
                             {{/if}}
                         </div>
 
